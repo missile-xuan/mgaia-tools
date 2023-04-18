@@ -3,7 +3,7 @@ import { UploadFilled } from '@element-plus/icons-vue'
 import type { UploadUserFile, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import * as pdfjsLib from 'pdfjs-dist' // 需要通过as引入 （坑死）
-import workerSrc from 'pdfjs-dist/build/pdf.worker.entry?url'
+import workerSrc from 'pdfjs-dist/build/pdf.worker.js?url'
 import lodash from 'lodash'
 import JSZip from 'JSZip'
 import { saveAs } from 'file-saver'
@@ -12,6 +12,7 @@ import { ref } from 'vue'
 const uploadRef = ref()
 const htmlName = ref('')
 const fileList = ref<UploadFile[]>([])
+console.log(new URL(workerSrc, import.meta.url).href)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(workerSrc, import.meta.url).href
 
 const fileExceed = (files: File[], uploadFiles: UploadUserFile[]) => {
@@ -114,7 +115,7 @@ const build = async () => {
 </script>
 
 <template>
-  <div class="content">
+  <div class="global-c-main-content">
     pdf转html
     <el-upload
       ref="uploadRef"
@@ -151,19 +152,13 @@ const build = async () => {
 </template>
 
 <style scoped lang="scss">
-.content{
-  display: flex;
-  padding-top: 20px;
-  flex-direction: column;
-  align-items: center;
-}
-
 $upload-width: 400px;
 .upload-pdf{
   width: $upload-width;
 }
 .imput-buttom{
   width: $upload-width;
+  padding-bottom: 10px;
 }
 
 </style>

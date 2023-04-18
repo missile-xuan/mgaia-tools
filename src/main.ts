@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/theme-chalk/src/index.scss'
+import '@/assets/scss/default-class.scss'
 
 import App from './App.vue'
 import router from './router'

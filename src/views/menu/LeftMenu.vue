@@ -1,22 +1,36 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import router from '@/router'
+import { useRoute } from 'vue-router'
+
+const nowRoute = useRoute()
+console.log(nowRoute.path)
 // 左侧菜单
 const activeMenu = ref('')
 const menuGroupList = [
   {
-    groupTitle: 'PDF相关',
+    groupTitle: '文件相关',
     menuList: [
       {
         menuName: 'PDF转图片网页',
-        path: ''
+        path: '/pdfToHtml'
       },
       {
-        menuName: '生成pdf',
-        path: ''
+        menuName: '数据导出excel',
+        path: '/buildExcel'
+      },
+      {
+        menuName: '图片压缩',
+        path: '/compressionImage'
       }
     ]
   }
 ]
+
+const clickMenu = (meun: {menuName: string, path:string}) => {
+  activeMenu.value = meun.path
+  router.push(meun.path)
+}
 
 </script>
 
@@ -27,8 +41,8 @@ const menuGroupList = [
       <div
         v-for="meun of group.menuList"
         :key="meun.menuName"
-        :class="{link:true, active:activeMenu === meun.menuName}"
-        @click="activeMenu = meun.menuName"
+        :class="{link:true, active:meun.path === nowRoute.path}"
+        @click="clickMenu(meun)"
       >
         {{ meun.menuName }}
       </div>
@@ -54,6 +68,7 @@ const menuGroupList = [
     cursor: pointer;
     color: #606266;
     transition: color .5s;
+    margin-bottom: 10px;
   }
   .link:hover{
     color: #409eff;

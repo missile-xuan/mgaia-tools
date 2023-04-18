@@ -13,6 +13,7 @@ declare module '@vue/runtime-core' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
+    ElSlider: typeof import('element-plus/es')['ElSlider']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Github: typeof import('./src/components/icons/github.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']

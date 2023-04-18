@@ -11,7 +11,18 @@ const router = createRouter({
         {
           path: '/pdfToHtml',
           name: 'PdfToHtml',
-          component: () => import('@/views/pdfToHtml/PdfToHtml.vue')
+          component: () => import('@/views/pdfToHtml/PdfToHtml.vue'),
+          meta: {
+            title: 'PDF转图片文件'
+          }
+        },
+        {
+          path: '/compressionImage',
+          name: 'CompressionImage',
+          component: () => import('@/views/compressionImage/CompressionImage.vue'),
+          meta: {
+            title: '图片压缩'
+          }
         }
       ]
     }
