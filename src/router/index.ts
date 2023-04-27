@@ -23,6 +23,14 @@ const router = createRouter({
           meta: {
             title: '图片压缩'
           }
+        },
+        {
+          path: '/buildExcel',
+          name: 'BuildExcel',
+          component: () => import('@/views/buildExcel/BuildExcel.vue'),
+          meta: {
+            title: '构建excel导出'
+          }
         }
       ]
     }

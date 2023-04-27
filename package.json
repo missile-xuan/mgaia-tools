@@ -13,13 +13,16 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
     "element-plus": "^2.3.3",
+    "exceljs": "^4.3.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
     "pdfjs-dist": "^3.5.141",
     "pinia": "^2.0.32",
+    "sheetjs-style-v2": "^0.15.6",
     "vue": "^3.2.47",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",
