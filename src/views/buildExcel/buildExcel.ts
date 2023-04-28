@@ -11,6 +11,8 @@ export interface TableCellData {
 // sheet页数据结构
 export interface SheetData{
   sheetName: string // sheet名字
+  // 按开始行，开始列，结束行，结束列合并（相当于 K10:M12）
+  // worksheet.mergeCells(10,11,12,13);
   mergeCoordinate: [number, number, number, number][] // 需要合并的单元格数据
   tableData: TableCellData[][] // 数据
   columnsCount: number // 列数
@@ -24,7 +26,7 @@ export interface SheetData{
  * @param sheetName string
  * @returns SheetData
  */
-export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: string):SheetData {
+export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: string = 'sheet1'):SheetData {
   const trDomList = tableDom.querySelectorAll('tr')
 
   // 构造数据
@@ -103,14 +105,40 @@ export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: strin
   }
 }
 
+/**
+ * 合并sheet页数据
+ * @param sheetDataList 需要合并的sheet页数据列表
+ * @param sheetName 合并后sheet页名
+ * @returns SheetData
+ */
 export function mergeSheetData (sheetDataList: SheetData[], sheetName:string = 'sheet1') {
   // 行偏移量
   let rowOffset = 0
 
-  // 最大列数
-  let maxColumnsCount = 0
+  // 汇总sheet
+  const summarySheet:SheetData = {
+    sheetName,
+    mergeCoordinate: [],
+    tableData: [],
+    columnsCount: 0
+  }
 
-  
+  // 进行循环合并
+  for (let i = 0; i < sheetDataList.length; i++) {
+    const sheet = sheetDataList[i]
+    // 设置最大的表头
+    if (summarySheet.columnsCount < sheet.columnsCount) summarySheet.columnsCount = sheet.columnsCount
+    // 追加数据
+    summarySheet.tableData = [...summarySheet.tableData, ...sheet.tableData]
+    // 追加合并单元格数据
+    for (const merge of sheet.mergeCoordinate) {
+      summarySheet.mergeCoordinate.push([merge[0] + rowOffset, merge[1], merge[2] + rowOffset, merge[3]])
+    }
+    // 调整行偏移量
+    rowOffset += sheet.tableData.length
+  }
+
+  return summarySheet
 }
 
 /**

@@ -4,7 +4,7 @@ import * as ExcelJS from 'exceljs'
 import lodash from 'lodash'
 // import * as XLSX from ' sheetjs-style-v2'
 import { ref } from 'vue'
-import { tableDomToExcel, downloadExcel } from './buildExcel'
+import { sheetDataListToExcel, mergeSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
 // 构建excel
 const testTableData = [
   { id: 1, name: 'a', data: 'aa' },
@@ -28,11 +28,21 @@ const tabeDiv = ref<HTMLElement>()
 
 // 导出eltable表格测试
 const build1 = () => {
+  const headerSheet = tableDomToSheetData(tabeDiv.value?.$el.querySelector('.el-table__header'))
+  const dataSheet = tableDomToSheetData(tabeDiv.value?.$el.querySelector('.el-table__body'))
+  const sheet = mergeSheetData([headerSheet, dataSheet])
+  downloadExcel(sheetDataListToExcel([sheet]))
 }
 
 // 导出普通table表格测试
 const build2 = async () => {
-  downloadExcel(tableDomToExcel(document.querySelector('#textTable')!))
+  // downloadExcel(tableDomToExcel(document.querySelector('#textTable')!))
+
+  const sheet1 = tableDomToSheetData(document.querySelector('#textTable')!)
+  const sheet2 = tableDomToSheetData(document.querySelector('#textTable')!)
+  const sheet3 = tableDomToSheetData(document.querySelector('#textTable')!)
+  const sheet = mergeSheetData([sheet1, sheet2, sheet3])
+  downloadExcel(sheetDataListToExcel([sheet]))
 }
 
 // 基础导出测试
