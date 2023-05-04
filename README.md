@@ -4,6 +4,8 @@ mgaia的工具站
 
 ## TODO
 - [x] PDF转网页
+- [ ] PDF拆页
+- [ ] PDF文字提取
 - [x] 图片压缩
 - [ ] 导出excel
     - [x] 通过页面tabledom导出SheetData数据支持合并单元格

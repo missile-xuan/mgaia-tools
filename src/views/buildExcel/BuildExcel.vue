@@ -31,8 +31,9 @@ const tabeDiv = ref<HTMLElementPlus>()
 // 导出eltable表格测试
 const build1 = () => {
   const headerSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__header')!, true)
-  const dataSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__body')!)
+  const dataSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__body')!, true)
   const sheet = mergeSheetData([headerSheet, dataSheet])
+  console.log(sheet)
   downloadExcel(sheetDataListToExcel([sheet]))
 }
 
