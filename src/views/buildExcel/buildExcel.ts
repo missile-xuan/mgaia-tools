@@ -6,6 +6,27 @@ export interface TableCellData {
   value: null|string;
   colSpan: number;
   rowSpan: number;
+  style?: {
+    // 字体样式
+    font: {
+      name?:string // 字体名称。  'Arial', 'Calibri', etc.
+      family?:number // 备用字体家族。整数值。  1 - Serif, 2 - Sans Serif, 3 - Mono, Others - unknown
+      scheme?:string // 字体方案。  'minor', 'major', 'none'
+      charset?:number //  字体字符集。整数值。  1, 2, etc.
+      size?:number // 字体大小。整数值。  9, 10, 12, 16, etc.
+      color?:{ argb:string } //  颜色描述，一个包含 ARGB 值的对象。  { argb: 'FFFF0000'}
+      bold?:boolean // 字体 粗细 true, false
+      italic?:boolean // 字体 倾斜 true, false
+      underline?:boolean|string //  字体 下划线 样式  true, false, 'none', 'single', 'double', 'singleAccounting', 'doubleAccounting'
+      strike?:boolean // 字体 删除线 true, false
+      outline?:boolean //  字体轮廓  true, false
+      vertAlign?:string //  垂直对齐  'superscript', 'subscript'
+    }
+    // 对齐样式
+    alignment: {
+
+    }
+  }
 }
 
 // sheet页数据结构
@@ -23,10 +44,11 @@ export interface SheetData{
 /**
  * 通过tableDom构建sheet页数据
  * @param tableDom HTMLTableElement
+ * @param domStyle boolean 是否启用样式
  * @param sheetName string
  * @returns SheetData
  */
-export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: string = 'sheet1'):SheetData {
+export function tableDomToSheetData (tableDom:HTMLTableElement, domStyle: boolean = false, sheetName: string = 'sheet1'):SheetData {
   const trDomList = tableDom.querySelectorAll('tr')
 
   // 构造数据
@@ -53,6 +75,8 @@ export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: strin
         colSpan: tdList[tdi].colSpan,
         rowSpan: tdList[tdi].rowSpan
       }
+      // 如果开启样式获取 加载样式
+      if (domStyle) setDomStyle(tableData[tri][addTdI], tdList[tdi])
       // 横向合并单元格补充空数据
       for (let i = 1; i < tdList[tdi].colSpan; i++) {
         addTdI++
@@ -103,6 +127,35 @@ export function tableDomToSheetData (tableDom:HTMLTableElement, sheetName: strin
     tableData,
     columnsCount
   }
+}
+
+/**
+ * 初始化单元格样式参数
+ * @param cellData
+ * @returns
+ */
+function initCellDataStyle (cellData:TableCellData) {
+  if (!cellData.style) cellData.style = { font: {}, alignment: {} }
+  return cellData
+}
+/**
+ * 将要dom中样式设置到单元格数据中
+ * @param cellData 表格单元格数据对象
+ * @param cellDom 表格单元格dom
+ * @returns TableCellData
+ */
+function setDomStyle (cellData:TableCellData, cellDom:HTMLTableCellElement) {
+  // 加粗
+  console.log(cellDom.style)
+  if (parseInt(getComputedStyle(cellDom).fontWeight) > 500) {
+    initCellDataStyle(cellData)
+    cellData.style!.font.bold = true
+  }
+  // 背景色
+
+  // 文字颜色
+  // 对齐样式
+  return cellData
 }
 
 /**
@@ -174,10 +227,11 @@ export function sheetDataListToExcel (sheetDataList:SheetData[]) {
 /**
  * 通过tabledom构建excel
  * @param tableDom HTMLTableElement
+ * @param domStyle boolean 是否启用样式
  * @returns ExcelJS.Workbook
  */
-export function tableDomToExcel (tableDom:HTMLTableElement, sheetName:string = 'sheet1') {
-  return sheetDataListToExcel([tableDomToSheetData(tableDom, sheetName)])
+export function tableDomToExcel (tableDom:HTMLTableElement, styleType?:boolean, sheetName:string = 'sheet1') {
+  return sheetDataListToExcel([tableDomToSheetData(tableDom, styleType, sheetName)])
 }
 
 /**

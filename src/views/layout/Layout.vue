@@ -12,7 +12,7 @@ const goGithub = () => {
 <template>
   <div class="layout">
     <div class="top-bar">
-      <div>mgaia-tools</div>
+      <div>mgaia-tools(开发中)</div>
       <githubsvg class="icon" @click="goGithub"/>
     </div>
     <div class="bottom-content">
