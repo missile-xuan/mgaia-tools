@@ -11,7 +11,8 @@ mgaia的工具站
     - [x] 通过页面tabledom导出SheetData数据支持合并单元格
     - [x] 通过sheet页面数据合并导出Excel对象
     - [x] 渲染Excel下载
-    - [x] sheet页合并
+    - [x] sheet页向下合并
+    - [x] sheet页向右合并
     - [ ] 表格样式配置
     - [ ] 通过json数据导出表格
     - [ ] 自适应内容从而设定列宽度

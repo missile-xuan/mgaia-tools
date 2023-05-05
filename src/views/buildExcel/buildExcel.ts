@@ -10,7 +10,7 @@ export interface CellStyle {
   // 边框样式
   border: Partial<ExcelJS.Borders>
   // 对齐样式
-  alignment: {}
+  alignment: Partial<ExcelJS.Alignment>
 }
 
 // 数据结构中表格单元格数据字段
@@ -150,7 +150,9 @@ function initCellDataStyle (cellData: TableCellData) {
         strike: false,
         outline: false
       },
-      alignment: {},
+      alignment: {
+        vertical: 'bottom', horizontal: 'left'
+      },
       fill: {
         type: 'pattern',
         pattern: 'solid',
@@ -187,18 +189,25 @@ function setDomStyle (cellData: TableCellData, cellDom: HTMLTableCellElement) {
   if (fgColor !== '00000000') {
     (cellData.style!.fill as ExcelJS.FillPattern).fgColor!.argb = fgColor
   }
-  // 文字颜色
+  // 边框颜色
+  cellData.style!.border.top!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
+  cellData.style!.border.right!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
+  cellData.style!.border.bottom!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
+  cellData.style!.border.left!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
   // 对齐样式
+  // @ts-ignore
+  cellData.style!.alignment.horizontal = getComputedStyle(cellDom).textAlign
+
   return cellData
 }
 
 /**
- * 合并sheet页数据
+ * 向下方追加合并sheet页数据
  * @param sheetDataList 需要合并的sheet页数据列表
  * @param sheetName 合并后sheet页名
  * @returns SheetData
  */
-export function mergeSheetData (
+export function mergeDownSheetData (
   sheetDataList: SheetData[],
   sheetName: string = 'sheet1'
 ) {
@@ -234,6 +243,14 @@ export function mergeSheetData (
   }
 
   return summarySheet
+}
+
+// 向右追加合并sheet页数据 （elementui中table涉及到固定列的问题 所以需要横向合并 ！！！待定！！！ 先研究下结构）
+export function mergeRightSheetData (
+  sheetDataList: SheetData[],
+  sheetName: string = 'sheet1'
+) {
+
 }
 
 /**
@@ -307,6 +324,22 @@ function setCellStyle (cell: ExcelJS.Cell, style?: CellStyle) {
   cell.font = style.font
   cell.fill = style.fill
   cell.border = style.border
+  // 设置宽度
+  let nowColWidth = cell.worksheet.getColumn(cell.col).width
+  // debugger
+  // if (cell.col.toString() === '1') {
+  //   debugger
+  // }
+  if (lodash.isNil(nowColWidth)) nowColWidth = 0
+  let cellWidth = cell.text.length * 2
+  if (cellWidth < 6) cellWidth = 6
+  if (nowColWidth < cellWidth) {
+    cell.worksheet.getColumn(cell.col).width = cellWidth
+    // * cell.font.size!
+  }
+
+  // 设置对齐样式
+  cell.alignment = style.alignment
 }
 /**
  * 通过tabledom构建excel
@@ -328,12 +361,12 @@ export function tableDomToExcel (
  * 导出excel下载
  * @param workbook ExcelJS.Workbook
  */
-export async function downloadExcel (workbook: ExcelJS.Workbook) {
+export async function downloadExcel (workbook: ExcelJS.Workbook, name:string = 'exceljs') {
   // 导出
   const buffer = await workbook.xlsx.writeBuffer()
   const blob = new Blob([buffer])
   const aLink = document.createElement('a')
-  aLink.download = 'exceljs.xlsx'
+  aLink.download = name + '.xlsx'
   aLink.href = URL.createObjectURL(blob)
   aLink.click()
   aLink.remove()

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
+import TableCount from './TableCount.vue'
 import * as ExcelJS from 'exceljs'
 // import lodash from 'lodash'
 import { ref } from 'vue'
-import { sheetDataListToExcel, mergeSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
+import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
 // 构建excel
 const testTableData = [
   { id: 1, name: 'a', data: 'aa' },
@@ -32,7 +33,7 @@ const tabeDiv = ref<HTMLElementPlus>()
 const build1 = () => {
   const headerSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__header')!, true)
   const dataSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__body')!, true)
-  const sheet = mergeSheetData([headerSheet, dataSheet])
+  const sheet = mergeDownSheetData([headerSheet, dataSheet])
   console.log(sheet)
   downloadExcel(sheetDataListToExcel([sheet]))
 }
@@ -44,7 +45,7 @@ const build2 = async () => {
   const sheet1 = tableDomToSheetData(document.querySelector('#textTable')!)
   const sheet2 = tableDomToSheetData(document.querySelector('#textTable')!)
   const sheet3 = tableDomToSheetData(document.querySelector('#textTable')!)
-  const sheet = mergeSheetData([sheet1, sheet2, sheet3])
+  const sheet = mergeDownSheetData([sheet1, sheet2, sheet3])
   downloadExcel(sheetDataListToExcel([sheet]))
 }
 
@@ -94,7 +95,7 @@ const excelBuild = async () => {
   <div class="content">
     <el-table ref="tabeDiv" :data="testTableData" style="width: 100%" :span-method="spanMethod" border>
       <el-table-column align="center" prop="id" label="编号" width="180" />
-      <el-table-column label="多级嵌套表头测试" >
+      <el-table-column align="center" label="多级嵌套表头测试" >
         <el-table-column prop="name" label="名称" width="180" />
         <el-table-column prop="data" label="数据" />
       </el-table-column>
@@ -114,6 +115,8 @@ const excelBuild = async () => {
     <el-button type="primary"  @click="build2">导出table多sheet页合并</el-button>
     <el-button type="primary"  @click="build3">直接导出tableDom</el-button>
     <el-button type="primary"  @click="excelBuild">exceljs数据导出测试</el-button>
+
+    <TableCount/>
   </div>
 </template>
 
