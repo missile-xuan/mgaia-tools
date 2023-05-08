@@ -103,13 +103,13 @@ const excelBuild = async () => {
     <el-button type="primary"  @click="build1">导出eltable测试</el-button>
     <table id="textTable">
       <tr>
-        <td>1</td><td>a</td><td>aaa</td>
+        <td >1</td><td  rowspan="2" colspan="2">a</td><td>aaa</td><td  rowspan="2" colspan="2">2</td><td>2</td><td>2</td><td>2</td>
       </tr>
       <tr>
-        <td   rowspan="2" colspan="3">b</td><td>bbb</td><td>2</td><td>2</td><td>2</td><td>2</td><td>2</td>
+        <td  >b</td><td>bbb</td><td>2</td><td>2</td>
       </tr>
       <tr>
-       <td colspan="4">c</td> <td  colspan="2">3</td><td>ccc</td>
+       <td>c</td> <td >3</td><td>ccc</td>
       </tr>
     </table>
     <el-button type="primary"  @click="build2">导出table多sheet页合并</el-button>

@@ -50,6 +50,7 @@ const goGithub = () => {
 
     .content{
       flex-grow: 1;
+      width: 0;
     }
   }
 }

@@ -1,10 +1,28 @@
 <template>
   <el-table ref="tabe1Div" :data="tableData" border show-summary style="width: 100%">
-    <el-table-column prop="id" label="ID" width="180" />
-    <el-table-column prop="name" label="Name" />
-    <el-table-column prop="amount1" sortable label="Amount 1" />
-    <el-table-column prop="amount2" sortable label="Amount 2" />
-    <el-table-column prop="amount3" sortable label="Amount 3" />
+    <el-table-column fixed prop="id" label="ID" width="180" />
+    <el-table-column fixed prop="name" label="Name" width="180" />
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
+    <el-table-column prop="amount1" sortable label="Amount 1" width="180"/>
+    <el-table-column prop="amount2" sortable label="Amount 2" width="180"/>
+    <el-table-column prop="amount3" sortable label="Amount 3" width="180"/>
   </el-table>
   <el-button type="primary"  @click="build1">导出</el-button>
   <el-table

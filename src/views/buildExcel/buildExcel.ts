@@ -60,39 +60,43 @@ export function tableDomToSheetData (
     for (let tdi = 0; tdi < tdList.length; tdi++) {
       // 长度计数
       tempColumnsCount += tdList[tdi].colSpan as number
-      // 横向行数据添加
-      // 因为涉及到之前上方行的纵向合并但原告导致的挤占问题 所以直接从第一个开始插空就好
-      // 数据模型不存在空单元 所以没问题
       if (lodash.isNil(tableData[tri])) tableData[tri] = []
-      while (!lodash.isNil(tableData[tri][addTdI])) {
-        addTdI++
-      }
+
+      // 添加当前数据格子
+      // 如果当前位置被挤占向后偏移
+      while (!lodash.isNil(tableData[tri][addTdI])) { addTdI++ }
+      // 设置当前数据
       tableData[tri][addTdI] = {
-        value: tdList[tdi].innerText,
+        value: tdList[tdi].textContent,
         colSpan: tdList[tdi].colSpan,
         rowSpan: tdList[tdi].rowSpan
       }
       // 如果开启样式获取 加载样式
       if (domStyle) setDomStyle(tableData[tri][addTdI], tdList[tdi])
-      // 横向合并单元格补充空数据
-      for (let i = 1; i < tdList[tdi].colSpan; i++) {
-        addTdI++
-        tableData[tri][addTdI] = {
-          value: null,
-          colSpan: 1,
-          rowSpan: 1
-        }
-      }
-      // 纵向合并单元格补充数据
-      for (let i = 1; i < tdList[tdi].rowSpan; i++) {
-        for (let j = 0; j < tdList[tdi].colSpan; j++) {
+      // 如果涉及合并单元格先纵向补空数据格子 因为 先进行横向的话会导致下一行偏移量丢失
+      // 合并单元格补充数据
+      for (let colOffset = 0; colOffset < tdList[tdi].colSpan; colOffset++) {
+        // 先找纵向
+        for (let i = 1; i < tdList[tdi].rowSpan; i++) {
           if (lodash.isNil(tableData[tri + i])) tableData[tri + i] = []
-          tableData[tri + i][tdi + j] = {
+          tableData[tri + i][addTdI] = {
             value: null,
             colSpan: 1,
             rowSpan: 1
           }
         }
+        // 跳过原始数据格
+        if (colOffset === 0) {
+          addTdI++
+          continue
+        }
+        // 再处理横向
+        tableData[tri][addTdI] = {
+          value: null,
+          colSpan: 1,
+          rowSpan: 1
+        }
+        addTdI++
       }
     }
     if (columnsCount < tempColumnsCount) columnsCount = tempColumnsCount
