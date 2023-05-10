@@ -4,7 +4,7 @@ import TableCount from './TableCount.vue'
 import * as ExcelJS from 'exceljs'
 // import lodash from 'lodash'
 import { ref } from 'vue'
-import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
+import { jsonToSheetData, sheetDataListToExcel, mergeDownSheetData, mergeRightSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
 // 构建excel
 const testTableData = [
   { id: 1, name: 'a', data: 'aa' },
@@ -45,7 +45,7 @@ const build2 = async () => {
   const sheet1 = tableDomToSheetData(document.querySelector('#textTable')!)
   const sheet2 = tableDomToSheetData(document.querySelector('#textTable')!)
   const sheet3 = tableDomToSheetData(document.querySelector('#textTable')!)
-  const sheet = mergeDownSheetData([sheet1, sheet2, sheet3])
+  const sheet = mergeRightSheetData([sheet1, sheet2, sheet3])
   downloadExcel(sheetDataListToExcel([sheet]))
 }
 
@@ -89,6 +89,15 @@ const excelBuild = async () => {
   aLink.remove()
 }
 
+// json数据导出excel
+const jsonExcelBuild = () => {
+  const data = [
+    { a: 1, b: 2, c: 3 },
+    { a: 1, b: 2, c: 3 },
+    { a: 1, b: 2, c: 3 }
+  ]
+  downloadExcel(sheetDataListToExcel([jsonToSheetData(['a', 'b', 'c'], data)]))
+}
 </script>
 
 <template>
@@ -115,6 +124,7 @@ const excelBuild = async () => {
     <el-button type="primary"  @click="build2">导出table多sheet页合并</el-button>
     <el-button type="primary"  @click="build3">直接导出tableDom</el-button>
     <el-button type="primary"  @click="excelBuild">exceljs数据导出测试</el-button>
+    <el-button type="primary"  @click="jsonExcelBuild">json数据导出excel</el-button>
 
     <TableCount/>
   </div>

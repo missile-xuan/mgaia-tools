@@ -46,7 +46,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import type { TableColumnCtx } from 'element-plus'
-import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
+import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, downloadExcel } from './buildExcel'
 
 const tabe1Div = ref()
 const build1 = () => {

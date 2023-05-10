@@ -76,22 +76,17 @@ const build = async () => {
     canvas.style.width = 200 / (viewport.height / viewport.width) + 'px'
     await pdfPage.render({
       canvasContext: context as CanvasRenderingContext2D,
-      viewport: viewport
+      viewport
     }).promise.then(() => {
       console.log('渲染完成', i)
     })
     images?.file('image-' + i + '.png', canvas.toDataURL('image/png', 1.0).split(',')[1], { base64: true })
     imageHtmlStr += `<img src="./image-${i}.png"/>`
   }
-  const endscript = '</' + 'script>' // 为了绕过esl检查报错
   const htmlstr = `
     <!doctype html>
     <head>
     <meta charset="UTF-8">
-    <script src="https://unpkg.com/axios/dist/axios.min.js">${endscript}
-    <script>
-      axios.post('/yd/yd/BehaviorController/webpageRequest',{"behavior_module":"${outHtmlName}"});
-    ${endscript}
     </head>
     <body style="background-color:gray;">
     <style>

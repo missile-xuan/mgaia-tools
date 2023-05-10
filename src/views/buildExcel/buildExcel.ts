@@ -13,15 +13,26 @@ export interface CellStyle {
   alignment: Partial<ExcelJS.Alignment>
 }
 
-// 数据结构中表格单元格数据字段
+/**
+ * 数据结构中表格单元格数据字段
+ */
 export interface TableCellData {
-  value: null | string
-  colSpan: number
-  rowSpan: number
+  value: null | string | number
   style?: CellStyle
 }
 
-// sheet页数据结构
+/**
+ * 数据结构中 通过dom获取到单元格数据字段
+ * colSpan rowSpan 用于计算合并
+ */
+export interface TableDomCellData extends TableCellData {
+  colSpan: number
+  rowSpan: number
+}
+
+/**
+ * sheet页数据结构
+ */
 export interface SheetData {
   sheetName: string // sheet名字
   // 按开始行，开始列，结束行，结束列合并（相当于 K10:M12）
@@ -48,7 +59,7 @@ export function tableDomToSheetData (
   const trDomList = tableDom.querySelectorAll('tr')
 
   // 构造数据
-  const tableData: TableCellData[][] = []
+  const tableData: TableDomCellData[][] = []
   // 表头长度计数
   let columnsCount = 0
   for (let tri = 0; tri < trDomList!.length; tri++) {
@@ -110,8 +121,8 @@ export function tableDomToSheetData (
       rowData.push(tableData[rowIndex][colIndex]?.value)
       console.log()
       if (
-        tableData[rowIndex][colIndex]?.colSpan !== 1 ||
-        tableData[rowIndex][colIndex]?.rowSpan !== 1
+        tableData[rowIndex][colIndex].colSpan !== 1 ||
+        tableData[rowIndex][colIndex].rowSpan !== 1
       ) {
         // 如果行列合并存在不为1的情况则需要进行合并单元格操作
         // 按开始行，开始列，结束行，结束列合并（相当于 K10:M12）
@@ -132,6 +143,39 @@ export function tableDomToSheetData (
   }
 }
 
+export interface JsonData {
+  [key:string]:string|number,
+}
+/**
+ * json数据转SheetData
+ * @param selectedList 选中需要导出的key值
+ * @param jsonData json数据体
+ * @param sheetName sheet页名字 可选
+ * @returns ExcelJS.Workbook
+ */
+export function jsonToSheetData (
+  selectedList:string[],
+  jsonData:JsonData[],
+  sheetName: string = 'sheet1'
+) {
+  const sheetData:SheetData = {
+    sheetName,
+    mergeCoordinate: [],
+    tableData: [],
+    columnsCount: 0
+  }
+  // 创建工作簿
+  for (const data of jsonData) {
+    const rowData:TableCellData[] = []
+    for (const key of selectedList) {
+      rowData.push({
+        value: data[key]
+      })
+    }
+    sheetData.tableData.push(rowData)
+  }
+  return sheetData
+}
 /**
  * 初始化单元格样式参数
  * @param cellData
@@ -249,12 +293,58 @@ export function mergeDownSheetData (
   return summarySheet
 }
 
-// 向右追加合并sheet页数据 （elementui中table涉及到固定列的问题 所以需要横向合并 ！！！待定！！！ 先研究下结构）
+/**
+ * 向右追加合并sheet页数据
+ * @param sheetDataList
+ * @param sheetName
+ */
 export function mergeRightSheetData (
   sheetDataList: SheetData[],
   sheetName: string = 'sheet1'
 ) {
+  // 列偏移量
+  let columnOffest = 0
+  // 汇总sheet
+  const summarySheet: SheetData = {
+    sheetName,
+    mergeCoordinate: [],
+    tableData: [],
+    columnsCount: 0
+  }
 
+  // 对传入sheet页列表进行循环
+  for (let i = 0; i < sheetDataList.length; i++) {
+    const sheet = sheetDataList[i]
+    summarySheet.columnsCount += sheet.columnsCount
+    // 循环sheet页每一行进行数据添加
+    for (let rowIndex = 0; rowIndex < sheet.tableData.length; rowIndex++) {
+      const row = sheet.tableData[rowIndex]
+      // 如果汇总sheet此行为空 可直接添加
+      if (lodash.isNil(summarySheet.tableData[rowIndex])) {
+        summarySheet.tableData[rowIndex] = row
+      } else {
+        // 否则逐个添加
+        // 注意不能直接向后追加 因为行数据不一定齐
+        for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
+          // 注意要加columnOffest偏移
+          summarySheet.tableData[rowIndex][columnOffest + cellIndex] = row[cellIndex]
+        }
+      }
+    }
+
+    // 追加合并单元格数据
+    for (const merge of sheet.mergeCoordinate) {
+      summarySheet.mergeCoordinate.push([
+        merge[0],
+        merge[1] + columnOffest,
+        merge[2],
+        merge[3] + columnOffest
+      ])
+    }
+    // 调整行偏移量
+    columnOffest += sheet.columnsCount
+  }
+  return summarySheet
 }
 
 /**
@@ -322,7 +412,12 @@ function rgbaToArgbHEX (rgba: string) {
   ].join('')
 }
 
-// 设置单元格样式
+/**
+ * 设置单元格样式 将传入样式设置到单元格
+ * @param cell 单元格
+ * @param style 样式
+ * @returns ExcelJS.Cell
+ */
 function setCellStyle (cell: ExcelJS.Cell, style?: CellStyle) {
   if (lodash.isNil(style)) return
   cell.font = style.font
@@ -344,6 +439,7 @@ function setCellStyle (cell: ExcelJS.Cell, style?: CellStyle) {
 
   // 设置对齐样式
   cell.alignment = style.alignment
+  return cell
 }
 /**
  * 通过tabledom构建excel
