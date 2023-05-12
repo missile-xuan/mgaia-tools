@@ -17,7 +17,7 @@ const goGithub = () => {
     </div>
     <div class="bottom-content">
       <LeftMenu/>
-      <RouterView class="content"/>
+      <RouterView class="global-c-main-content"/>
     </div>
   </div>
 </template>

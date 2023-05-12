@@ -101,7 +101,7 @@ const jsonExcelBuild = () => {
 </script>
 
 <template>
-  <div class="content">
+  <div class="global-c-main-content">
     <el-table ref="tabeDiv" :data="testTableData" style="width: 100%" :span-method="spanMethod" border>
       <el-table-column align="center" prop="id" label="编号" width="180" />
       <el-table-column align="center" label="多级嵌套表头测试" >
@@ -131,12 +131,6 @@ const jsonExcelBuild = () => {
 </template>
 
 <style scoped lang="scss">
-.content{
-  display: flex;
-  padding-top: 20px;
-  flex-direction: column;
-  align-items: center;
-}
 
 #textTable{
   td {

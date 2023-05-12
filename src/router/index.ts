@@ -31,6 +31,22 @@ const router = createRouter({
           meta: {
             title: '构建excel导出'
           }
+        },
+        {
+          path: '/jsonFormat',
+          name: 'JsonFormat',
+          component: () => import('@/views/jsonFormat/JsonFormat.vue'),
+          meta: {
+            title: 'json格式化'
+          }
+        },
+        {
+          path: '/textOcr',
+          name: 'TextOcr',
+          component: () => import('@/views/textOcr/TextOcr.vue'),
+          meta: {
+            title: 'OCR文字识别'
+          }
         }
       ]
     }

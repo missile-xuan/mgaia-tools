@@ -76,7 +76,7 @@ const build = () => {
 </script>
 
 <template>
-  <div class="content">
+  <div class="global-c-main-content">
     前端实现图片压缩
     <el-upload
       ref="uploadRef"
@@ -127,13 +127,6 @@ const build = () => {
 </template>
 
 <style scoped lang="scss">
-.content{
-  display: flex;
-  padding-top: 20px;
-  flex-direction: column;
-  align-items: center;
-}
-
 $upload-width: 400px;
 .upload-pdf{
   width: $upload-width;

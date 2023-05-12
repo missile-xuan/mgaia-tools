@@ -22,6 +22,19 @@ const menuGroupList = [
       {
         menuName: '图片压缩',
         path: '/compressionImage'
+      },
+      {
+        menuName: 'OCR文字识别',
+        path: '/textOcr'
+      }
+    ]
+  },
+  {
+    groupTitle: '代码相关',
+    menuList: [
+      {
+        menuName: 'JSON格式化',
+        path: '/jsonFormat'
       }
     ]
   }
