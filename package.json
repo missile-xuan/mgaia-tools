@@ -19,6 +19,8 @@
     "lodash": "^4.17.21",
     "pdfjs-dist": "^3.5.141",
     "pinia": "^2.0.32",
+    "qr-code-styling": "^1.6.0-rc.1",
+    "qrcode-decoder": "^0.3.3",
     "sheetjs-style-v2": "^0.15.6",
     "tesseract.js": "^4.0.5",
     "vue": "^3.2.47",

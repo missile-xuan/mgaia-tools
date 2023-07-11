@@ -47,6 +47,14 @@ const router = createRouter({
           meta: {
             title: 'OCR文字识别'
           }
+        },
+        {
+          path: '/qr',
+          name: 'QR',
+          component: () => import('@/views/qr/QR.vue'),
+          meta: {
+            title: '二维码解析生成'
+          }
         }
       ]
     }
