@@ -16,6 +16,10 @@ const menuGroupList = [
         path: '/pdfToHtml'
       },
       {
+        menuName: 'PDF拆分',
+        path: '/pdfToHtml'
+      },
+      {
         menuName: '数据导出excel',
         path: '/buildExcel'
       },
@@ -39,6 +43,15 @@ const menuGroupList = [
       {
         menuName: 'JSON格式化',
         path: '/jsonFormat'
+      }
+    ]
+  },
+  {
+    groupTitle: '实用工具',
+    menuList: [
+      {
+        menuName: '二维码转换',
+        path: '/QRcode'
       }
     ]
   }

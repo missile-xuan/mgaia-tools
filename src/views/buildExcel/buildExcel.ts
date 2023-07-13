@@ -1,7 +1,9 @@
 import * as ExcelJS from 'exceljs'
 import lodash from 'lodash'
 
-// 单元格样式
+/**
+ * 单元格样式
+ */
 export interface CellStyle {
   // 字体样式
   font: ExcelJS.Font
@@ -188,18 +190,18 @@ function initCellDataStyle (cellData: TableCellData) {
         name: 'Arial',
         size: 16,
         family: 2,
-        scheme: 'major',
+        scheme: 'minor',
         charset: 1,
         color: { argb: 'FFFF0000' },
         bold: false,
         italic: false,
         underline: false,
-        vertAlign: 'subscript',
+        // vertAlign: 'superscript',
         strike: false,
         outline: false
       },
       alignment: {
-        vertical: 'bottom', horizontal: 'left'
+        vertical: 'middle', horizontal: 'left'
       },
       fill: {
         type: 'pattern',
@@ -225,6 +227,8 @@ function initCellDataStyle (cellData: TableCellData) {
 function setDomStyle (cellData: TableCellData, cellDom: HTMLTableCellElement) {
   // 初始化单元格中的style对象
   initCellDataStyle(cellData)
+  // 字体大小
+  cellData.style!.font.size = parseInt(getComputedStyle(cellDom).fontSize)
   // 加粗
   console.log(cellDom.style)
   if (parseInt(getComputedStyle(cellDom).fontWeight) > 500) {
@@ -430,7 +434,7 @@ function setCellStyle (cell: ExcelJS.Cell, style?: CellStyle) {
   //   debugger
   // }
   if (lodash.isNil(nowColWidth)) nowColWidth = 0
-  let cellWidth = cell.text.length * 2
+  let cellWidth = cell.text.length * style.font.size / 4
   if (cellWidth < 6) cellWidth = 6
   if (nowColWidth < cellWidth) {
     cell.worksheet.getColumn(cell.col).width = cellWidth
