@@ -49,11 +49,11 @@ const router = createRouter({
           }
         },
         {
-          path: '/QRcode',
-          name: 'QRcode',
-          component: () => import('@/views/qrcode/QRcode.vue'),
+          path: '/qr',
+          name: 'QR',
+          component: () => import('@/views/qr/QR.vue'),
           meta: {
-            title: '二维码转换'
+            title: '二维码解析生成'
           }
         }
       ]
