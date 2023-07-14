@@ -88,7 +88,6 @@ const downloadQR = () => {
         document.body.removeChild(downloadLink)
       }
     }
-
   }
 }
 

@@ -17,7 +17,7 @@ const menuGroupList = [
       },
       {
         menuName: 'PDF拆分',
-        path: '/pdfToHtml'
+        path: '/pdfDivide'
       },
       {
         menuName: '数据导出excel',
