@@ -17,6 +17,14 @@ const router = createRouter({
           }
         },
         {
+          path: '/pdfDivide',
+          name: 'PdfDivide',
+          component: () => import('@/views/pdfDivide/PdfDivide.vue'),
+          meta: {
+            title: 'PDF拆分'
+          }
+        },
+        {
           path: '/compressionImage',
           name: 'CompressionImage',
           component: () => import('@/views/compressionImage/CompressionImage.vue'),

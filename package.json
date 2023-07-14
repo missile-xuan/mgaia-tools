@@ -17,6 +17,7 @@
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.5.141",
     "pinia": "^2.0.32",
     "qr-code-styling": "^1.6.0-rc.1",
