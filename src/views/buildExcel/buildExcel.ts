@@ -186,6 +186,7 @@ export function jsonToSheetData (
 function initCellDataStyle (cellData: TableCellData) {
   if (!cellData.style) {
     cellData.style = {
+      // @ts-ignore：引用包的声明有问题
       font: {
         name: 'Arial',
         size: 16,

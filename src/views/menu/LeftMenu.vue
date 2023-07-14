@@ -30,10 +30,6 @@ const menuGroupList = [
       {
         menuName: 'OCR文字识别',
         path: '/textOcr'
-      },
-      {
-        menuName: '二维码解析生成',
-        path: '/qr'
       }
     ]
   },
@@ -50,8 +46,8 @@ const menuGroupList = [
     groupTitle: '实用工具',
     menuList: [
       {
-        menuName: '二维码转换',
-        path: '/QRcode'
+        menuName: '二维码解析生成',
+        path: '/qr'
       }
     ]
   }
