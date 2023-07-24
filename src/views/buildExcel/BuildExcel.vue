@@ -2,138 +2,82 @@
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
 import { ref } from 'vue'
-import { sheetDataListToExcel, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
-// 构建excel
-const jsonText = ref()
+import type { TableCellData } from './buildExcel'
+// ========配置面板========
+// 表格公共配置
 const tableOption = ref({
   rows: 3,
   cols: 7
 })
-const textTable = ref()
-const createTable = () => {
-  const tableElement: HTMLElement = textTable.value
-  // 清空表格内容
-  while (tableElement.firstChild) {
-    tableElement.removeChild(tableElement.firstChild)
-  }
-  // 生成新的表格内容
-  for (let rowIndex = 1; rowIndex <= tableOption.value.rows; rowIndex++) {
-    const row = document.createElement('tr')
-    row.style.border = '1px solid black'
-    for (let colIndex = 1; colIndex <= tableOption.value.cols; colIndex++) {
-      const cell = document.createElement('td')
-      cell.style.border = '1px solid black'
-      cell
-      cell.textContent = `${rowIndex}, ${colIndex}`
-      row.appendChild(cell)
-    }
-    tableElement.appendChild(row)
-  }
-}
-const addRight = () => {
-}
-const addBelow = () => {
-}
-let selectedCells = [] // 二维数组，用于存储选中状态
-let isDragging = false // 是否正在拖拽
-let startRowIndex = -1 // 拖拽开始的行索引
-let startColIndex = -1 // 拖拽开始的列索引
 
-const toggleCellSelection = (rowIndex, colIndex) => {
-  // 取反选中状态
-
-}
-const isCellSelected = (rowIndex, colIndex) => {
-  // 检查选中状态
-
-}
-const handleCellMouseDown = (rowIndex, colIndex) => {
-  isDragging = true
-  startRowIndex = rowIndex
-  startColIndex = colIndex
-  toggleCellSelection(rowIndex, colIndex)
-}
-const handleCellMouseMove = (rowIndex, colIndex) => {
-  if (isDragging) {
-    // 鼠标移动过程中，更新拖拽区域内的选中状态
-    for (let row = Math.min(rowIndex, startRowIndex); row <= Math.max(rowIndex, startRowIndex); row++) {
-      for (let col = Math.min(colIndex, startColIndex); col <= Math.max(colIndex, startColIndex); col++) {
-        toggleCellSelection(row, col)
+// 表格单元格结构数据
+const tableCellData = ref<TableCellData[][]>([])
+// 需要合并的单元格
+const mergeCoordinate = ref<[number, number, number, number][]>([])
+// 设置表格
+const setTableOption = () => {
+  const tableCellDataCopy = JSON.parse(JSON.stringify(tableCellData.value))
+  tableCellData.value = []
+  for (let rowIndex = 0; tableOption.value.rows > rowIndex; rowIndex++) {
+    tableCellData.value[rowIndex] = []
+    for (let colIndex = 0; tableOption.value.cols > colIndex; colIndex++) {
+      let cellValue = 'text'
+      let cellStyle
+      if (tableCellDataCopy[rowIndex] && tableCellDataCopy[rowIndex][colIndex]) {
+        cellValue = tableCellDataCopy[rowIndex][colIndex].value
+        cellStyle = tableCellDataCopy[rowIndex][colIndex].style
+      }
+      tableCellData.value[rowIndex][colIndex] = {
+        value: cellValue,
+        style: cellStyle
       }
     }
   }
 }
-const handleCellMouseUp = () => {
-  isDragging = false
-  startRowIndex = -1
-  startColIndex = -1
+setTableOption()
+// ========动作状态========
+// 当前焦点单元格
+const focusCell = ref([0, 0])
+// 单元格点击事件 传入所点击单元格的坐标
+const clickCell = (rowIndex:number, colIndex:number) => {
+  focusCell.value[0] = rowIndex
+  focusCell.value[1] = colIndex
 }
-const updateTable = () => {
-  // 更新表格内容和样式
-  selectedCells = []
-}
+// 是否正在拖拽
+let isDragging = false
+
 </script>
 
 <template>
   <div class="global-c-main-content">
     <div class="left">
-      <table class="header" ref="textTable">
-        <tr>
-          <td v-for="colIndex in tableOption.rows" :key="colIndex">
-            列{{ colIndex }}
-          </td>
-        </tr>
-        <tr v-for="(row, rowIndex) in tableData" :key="rowIndex">
-          <th>行{{ rowIndex + 1 }}</th>
-          <td v-for="(col, colIndex) in row" :key="colIndex" @mousedown="handleCellMouseDown(rowIndex, colIndex)"
-            @mousemove="handleCellMouseMove(rowIndex, colIndex)" @mouseup="handleCellMouseUp(rowIndex, colIndex)"
-            :class="{ selected: isCellSelected(rowIndex, colIndex) }">
-            {{ col }}
-          </td>
-        </tr>
-      </table>
-      <div class="json">
-        <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="jsonText">
-        </el-input>
+      <div>
+        <div class="show-row" v-for="(row,rowIndex) in tableCellData" :key="rowIndex">
+          <div
+            class="show-cell"
+            v-for="(cel,colIndex) in row"
+            :key="rowIndex+','+colIndex"
+            @click="clickCell(rowIndex, colIndex)"
+          >{{ cel.value }}</div>
+        </div>
       </div>
     </div>
     <div class="right">
-      <div class="TableOption">
-        <el-form :inline="true" :model="tableOption" class="demo-form-inline">
-          <el-form-item label="表头行数">
-            <el-input v-model="tableOption.rows" placeholder="表头行数"></el-input>
-          </el-form-item>
-          <el-form-item label="表头列数">
-            <el-input v-model="tableOption.cols" placeholder="表头列数">
-            </el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="createTable">生成</el-button>
-          </el-form-item>
-        </el-form>
-        <el-form :inline="true" :model="tableOption" class="demo-form-inline">
-          <el-form-item>
-            <el-button @click="addRight">向右添加一行</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="addBelow">向下添加一行</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div class="cellOption">
-        <!-- <el-form :model="tableOption" class="demo-form-inline">
-          <el-form-item label="key">
-            <el-input v-model="cellOptionArray.key" placeholder="数据键值"></el-input>
-          </el-form-item>
-          <el-form-item label="表头列数">
-            <el-input v-model="cellOptionArray.babel" placeholder="表头列数">
-            </el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="apply">应用样式到全部</el-button>
-          </el-form-item>
-        </el-form> -->
-      </div>
+      <div class="title row">表格属性</div>
+      <div class="row"><span>行: </span><el-input-number size="small" v-model="tableOption.rows" :min="1" :step="1" step-strictly /></div>
+      <div class="row"><span>列: </span><el-input-number size="small" v-model="tableOption.cols" :min="1" :step="1" step-strictly /></div>
+      <div class="row"><span>边框颜色: </span></div>
+      <div class="row"><span>边框粗细: </span></div>
+      <div class="row" style="text-align: right;"><el-button size="small" @click="setTableOption">应用</el-button></div>
+      <div class="line row"></div>
+      <div class="title row">单元格属性</div>
+      <div class="row">{{ focusCell }}</div>
+      <div class="row"><span>显示值: </span></div>
+      <div class="row"><span>绑定值: </span></div>
+      <div class="row"><span>字号: </span></div>
+      <div class="row"><span>字体色: </span></div>
+      <div class="row"><span>背景色: </span></div>
+
     </div>
   </div>
 </template>
@@ -141,16 +85,38 @@ const updateTable = () => {
 <style scoped lang="scss">
 .global-c-main-content {
   flex-direction: row;
+  .left{
+    height: 100%;
+    flex-grow: 1;
+    background-color: aqua;
+    display: flex;
+    justify-content: center;
 
-  .header {
-    // border: 1px solid black;
-  }
-
-  .json {}
-
-  .right {
-    .TableOption {
+    .show-row{
       display: flex;
+      justify-content: center;
+    }
+    .show-cell{
+      height: 20px;
+      min-width: 20px;
+      border-right: 1px solid #dcdfe6;
+      border-bottom: 1px solid #dcdfe6;
+      cursor: pointer;
+    }
+  }
+  .right{
+    height: 100%;
+    width: 400px;
+    padding: 0 20px;
+
+    .row{
+      margin-bottom: 10px;
+    }
+    .title{
+      font-size: 16px;
+    }
+    .line{
+      border-bottom: 1px solid #dcdfe6;
     }
   }
 }
