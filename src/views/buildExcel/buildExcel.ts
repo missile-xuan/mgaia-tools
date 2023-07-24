@@ -398,7 +398,7 @@ export function sheetDataListToExcel (sheetDataList: SheetData[]) {
  * @param rgba
  * @returns
  */
-function rgbaToArgbHEX (rgba: string) {
+export function rgbaToArgbHEX (rgba: string) {
   let result = ''
   const reg = /\(.*\)/ // 字符串匹配括号内的子串
   let rgbaArr:(string)[] = []
