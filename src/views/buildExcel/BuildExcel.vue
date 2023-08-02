@@ -2,7 +2,7 @@
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
 import { nextTick, ref } from 'vue'
-import { rgbaToArgbHEX } from './buildExcel'
+import { downloadExcel, rgbaToArgbHEX, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
 // ========配置面板========
 // 表格公共配置
@@ -120,7 +120,7 @@ const rightDiv = ref()
 const merge = () => {
   if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
     debugger
-    mergeCoordinate.value.push([focusCell.value[0], focusCell.value[1], focusLastCell.value[0], focusLastCell.value[1]])
+    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
     cancel()
     focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
   }
@@ -134,9 +134,11 @@ let isDragging = false
 const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   if (event.button === 0) {
     isDragging = true
-    console.log(event.button)
+    debugger
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
+    fontColor.value = tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color
+    backgroundColor.value = ''
   } else if (event.button === 2) {
     rightVisible.value = true
     nextTick(() => {
@@ -160,6 +162,10 @@ const mouseUp = (rowIndex: number, colIndex: number, event: MouseEvent) => {
 }
 
 // 计算单元格宽度
+const createExcel = () => {
+  const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
+  downloadExcel(sheetDataListToExcel([temp]))
+}
 
 </script>
 
@@ -211,6 +217,7 @@ const mouseUp = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   <div ref="rightDiv" class="rightDiv" v-if="rightVisible">
     <div class='menu' @click="merge">合并单元格</div>
     <div class='menu' @click="merge">撤销</div>
+    <div class='menu' @click="createExcel">生成</div>
   </div>
 </template>
 
