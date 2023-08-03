@@ -11,6 +11,7 @@ mgaia的工具站
 - [x] json格式化
 - [x] 图片压缩
 - [x] 二维码制作/解析
+- [x] 视频转gif
 - [ ] 导出excel
     - [x] 通过页面tabledom导出SheetData数据支持合并单元格
     - [x] 通过sheet页面数据合并导出Excel对象
