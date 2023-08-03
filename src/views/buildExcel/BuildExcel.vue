@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
-import { ref } from 'vue'
-import { rgbaToArgbHEX } from './buildExcel'
+import { nextTick, ref } from 'vue'
+import { downloadExcel, rgbaToArgbHEX, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
 // ========配置面板========
 // 表格公共配置
@@ -12,6 +12,9 @@ const tableOption = ref({
   border: true,
   borderColor: 'rgba(0, 0, 0, 1)'
 })
+
+// 单元格属性
+// 对齐方式
 const alignOptions = [{
   value: 'left',
   label: 'left'
@@ -24,6 +27,17 @@ const alignOptions = [{
   value: 'right',
   label: 'right'
 }]
+// 单元格配置（颜色）
+const fontColor = ref()
+const backgroundColor = ref()
+const changeFontColor = () => {
+  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
+}
+const changeBackgroundColor = () => {
+  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(backgroundColor.value) }
+}
+
+// 初始化样式
 const initStyle: CellStyle = {
   // @ts-ignore：引用包的声明有问题
   font: {
@@ -55,21 +69,13 @@ const initStyle: CellStyle = {
     right: { style: 'thin', color: { argb: 'FF000000' } }
   }
 }
-// 单元格配置（颜色）
-const fontColor = ref()
-const backgroundColor = ref()
-const changeFontColor = () => {
-  debugger
-  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
-}
-const changeBackgroundColor = () => {
-  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(backgroundColor.value) }
-}
+
 // 表格单元格结构数据
 const tableCellData = ref<TableCellData[][]>([])
 // 需要合并的单元格
 const mergeCoordinate = ref<[number, number, number, number][]>([])
-// 设置表格
+
+// 设置表格-数据驱动
 const setTableOption = () => {
   const tableCellDataCopy = JSON.parse(JSON.stringify(tableCellData.value))
   tableCellData.value = []
@@ -79,10 +85,11 @@ const setTableOption = () => {
       // 初始化
       let cellValue = 'text'
       let cellStyle = JSON.parse(JSON.stringify(initStyle))
+      // 从原有数据重新赋值
       if (tableCellDataCopy[rowIndex] && tableCellDataCopy[rowIndex][colIndex]) {
         cellValue = tableCellDataCopy[rowIndex][colIndex].value
         cellStyle = tableCellDataCopy[rowIndex][colIndex].style
-        // 设置边框属性
+        // 设置边框属性（公共部分）
         cellStyle.border.top!.style = tableOption.value.border ? 'thin' : undefined
         cellStyle.border.right!.style = tableOption.value.border ? 'thin' : undefined
         cellStyle.border.bottom!.style = tableOption.value.border ? 'thin' : undefined
@@ -105,23 +112,71 @@ setTableOption()
 // ========动作状态========
 // 当前焦点单元格
 const focusCell = ref([0, 0])
-// 单元格点击事件 传入所点击单元格的坐标
-const clickCell = (rowIndex: number, colIndex: number) => {
-  focusCell.value[0] = rowIndex
-  focusCell.value[1] = colIndex
+const focusLastCell = ref([0, 0])
+
+// 右键内容
+const rightVisible = ref(false)
+const rightDiv = ref()
+const merge = () => {
+  if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
+    debugger
+    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
+    cancel()
+    focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
+  }
 }
+
+const table = ref()
+
 // 是否正在拖拽
 let isDragging = false
+
+const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
+  if (event.button === 0) {
+    isDragging = true
+    debugger
+    focusCell.value[0] = rowIndex
+    focusCell.value[1] = colIndex
+    fontColor.value = tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color
+    backgroundColor.value = ''
+  } else if (event.button === 2) {
+    rightVisible.value = true
+    nextTick(() => {
+      const x = event.clientX
+      const y = event.clientY
+      rightDiv.value.style.top = `${y}px`
+      rightDiv.value.style.left = `${x}px`
+    })
+  }
+}
+const cancel = () => {
+  rightVisible.value = false
+}
+const mouseUp = (rowIndex: number, colIndex: number, event: MouseEvent) => {
+  // 未拖拽状态 且非同一单元格 选中合并单元格末尾
+  if (isDragging && (focusCell.value[0] !== rowIndex || focusCell.value[1] !== colIndex)) {
+    isDragging = false
+    focusLastCell.value[0] = rowIndex
+    focusLastCell.value[1] = colIndex
+  }
+}
+
+// 计算单元格宽度
+const createExcel = () => {
+  const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
+  downloadExcel(sheetDataListToExcel([temp]))
+}
 
 </script>
 
 <template>
   <div class="global-c-main-content">
-    <div class="left">
-      <div>
+    <div class="left" @click="cancel">
+      <div ref="table" @contextmenu.prevent>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
-            @click="clickCell(rowIndex, colIndex)">{{ cel.value }}</div>
+            @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)">{{ cel.value
+            }}</div>
         </div>
       </div>
     </div>
@@ -159,9 +214,31 @@ let isDragging = false
           show-alpha /></div>
     </div>
   </div>
+  <div ref="rightDiv" class="rightDiv" v-if="rightVisible">
+    <div class='menu' @click="merge">合并单元格</div>
+    <div class='menu' @click="merge">撤销</div>
+    <div class='menu' @click="createExcel">生成</div>
+  </div>
 </template>
 
 <style scoped lang="scss">
+.rightDiv {
+  position: absolute;
+  border-radius: 5px;
+  padding: 5px 3px;
+  border: 1px solid #ddd;
+  background-color: #ffffff;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .1), 0 -1px 1px rgba(0, 0, 0, .1);
+
+  .menu {
+    padding: 3px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    color: #4e4e4e;
+    font-size: 12px;
+  }
+}
+
 .global-c-main-content {
   flex-direction: row;
 
@@ -183,6 +260,7 @@ let isDragging = false
       border-right: 1px solid #dcdfe6;
       border-bottom: 1px solid #dcdfe6;
       cursor: pointer;
+      user-select: none;
     }
   }
 
