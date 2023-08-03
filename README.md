@@ -2,6 +2,8 @@
 
 mgaia的工具站
 
+https://tools.mgaia.top/qr
+
 ## 需要功能提issues
 
 ## TODO

@@ -83,7 +83,7 @@ const build = () => {
   canvas.height = height.value * coefficient.value
   // eslint-disable-next-line no-undef
   videoGif = new GIF({
-    workers: 2,
+    workers: 8,
     quality: 1,
     workerScript: './jslab/gifjs/gif.worker.js',
     debug: true
