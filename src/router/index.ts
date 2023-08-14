@@ -71,6 +71,14 @@ const router = createRouter({
           meta: {
             title: '视频转GIF'
           }
+        },
+        {
+          path: '/screenRecording',
+          name: 'ScreenRecording',
+          component: () => import('@/views/screenRecording/ScreenRecording.vue'),
+          meta: {
+            title: '屏幕录制'
+          }
         }
       ]
     }

@@ -52,6 +52,10 @@ const menuGroupList = [
       {
         menuName: '视频转GIF',
         path: '/videoToGif'
+      },
+      {
+        menuName: '屏幕录制',
+        path: '/screenRecording'
       }
     ]
   }
