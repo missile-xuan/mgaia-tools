@@ -63,6 +63,22 @@ const router = createRouter({
           meta: {
             title: '二维码解析生成'
           }
+        },
+        {
+          path: '/videoToGif',
+          name: 'VideoToGif',
+          component: () => import('@/views/videoToGif/VideoToGif.vue'),
+          meta: {
+            title: '视频转GIF'
+          }
+        },
+        {
+          path: '/screenRecording',
+          name: 'ScreenRecording',
+          component: () => import('@/views/screenRecording/ScreenRecording.vue'),
+          meta: {
+            title: '屏幕录制'
+          }
         }
       ]
     }

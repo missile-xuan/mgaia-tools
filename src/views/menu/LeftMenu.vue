@@ -48,6 +48,14 @@ const menuGroupList = [
       {
         menuName: '二维码解析生成',
         path: '/qr'
+      },
+      {
+        menuName: '视频转GIF',
+        path: '/videoToGif'
+      },
+      {
+        menuName: '屏幕录制',
+        path: '/screenRecording'
       }
     ]
   }

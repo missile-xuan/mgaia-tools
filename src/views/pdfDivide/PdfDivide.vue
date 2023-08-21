@@ -92,7 +92,7 @@ async function getPDFPageCount (pdfUrl: string) {
       <el-button :disabled="fileList.length === 0" type="primary" @click="divide">拆分</el-button>
     </div>
     <div class="file-preview" v-loading.lock="fullscreenLoading">
-      <iframe class="jspdf" name="jspdf" id="jspdf" ref="jspdf" :src="pdfStr" frameborder="0"></iframe>
+      <iframe class="jspdf" name="jspdf" id="jspdf" ref="jspdf" :src="pdfStr" frameborder="no" ></iframe>
     </div>
   </div>
 </template>
@@ -111,6 +111,7 @@ $upload-width: 400px;
   .jspdf{
     width: 100%;
     height: 100%;
+    display: block;
   }
 }
 .upload-pdf {

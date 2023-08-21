@@ -2,6 +2,8 @@
 
 mgaia的工具站
 
+https://tools.mgaia.top/qr
+
 ## 需要功能提issues
 
 ## TODO
@@ -11,6 +13,8 @@ mgaia的工具站
 - [x] json格式化
 - [x] 图片压缩
 - [x] 二维码制作/解析
+- [x] 视频转gif
+- [x] 录屏（https://developer.mozilla.org/zh-CN/docs/Web/API/Screen_Capture_API）
 - [ ] 导出excel
     - [x] 通过页面tabledom导出SheetData数据支持合并单元格
     - [x] 通过sheet页面数据合并导出Excel对象

@@ -1,0 +1,2 @@
+
+declare const GIF:any
