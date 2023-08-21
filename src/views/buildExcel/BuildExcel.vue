@@ -2,7 +2,7 @@
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
 import { nextTick, ref } from 'vue'
-import { downloadExcel, rgbaToArgbHEX, sheetDataListToExcel } from './buildExcel'
+import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
 // ========配置面板========
 // 表格公共配置
@@ -28,8 +28,8 @@ const alignOptions = [{
   label: 'right'
 }]
 // 单元格配置（颜色）
-const fontColor = ref()
-const backgroundColor = ref()
+const fontColor = ref('rgba(1,1,1,1)')
+const backgroundColor = ref('rgba(0,0,0,0)')
 const changeFontColor = () => {
   tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
 }
@@ -46,7 +46,7 @@ const initStyle: CellStyle = {
     family: 2,
     scheme: 'minor',
     charset: 1,
-    color: { argb: 'FFFF0000' },
+    color: { argb: 'FF000000' },
     bold: false,
     italic: false,
     underline: false,
@@ -119,7 +119,13 @@ const rightVisible = ref(false)
 const rightDiv = ref()
 const merge = () => {
   if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
-    debugger
+    for (const item of mergeCoordinate.value) {
+      if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
+        mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+          return cell !== item
+        })
+      }
+    }
     mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
     cancel()
     focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
@@ -134,10 +140,9 @@ let isDragging = false
 const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   if (event.button === 0) {
     isDragging = true
-    debugger
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
-    fontColor.value = tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color
+    fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
     backgroundColor.value = ''
   } else if (event.button === 2) {
     rightVisible.value = true
