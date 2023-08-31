@@ -193,7 +193,7 @@ const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any 
     top: rowIndex * 21 + 'px',
     left: colIndex * 31 + 'px',
     border: border.value ? '1px solid' : '',
-    borderColor,
+    borderColor: borderColor.value,
     color: argbHEXToRgba(cel.style?.font.color.argb),
     fontSize: cel.style?.font.size + 'px',
     textAlign: cel.style?.alignment.horizontal,
