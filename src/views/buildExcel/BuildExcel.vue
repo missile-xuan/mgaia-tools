@@ -12,6 +12,8 @@ const tableOption = ref({
   border: true,
   borderColor: 'rgba(0, 0, 0, 1)'
 })
+const border = ref(true)
+const borderColor = ref('rgba(0, 0, 0, 1)')
 
 // 单元格属性
 // 对齐方式
@@ -34,7 +36,8 @@ const changeFontColor = () => {
   tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
 }
 const changeBackgroundColor = () => {
-  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(backgroundColor.value) }
+  // @ts-ignore
+  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.fill.fgColor = { argb: rgbaToArgbHEX(backgroundColor.value) }
 }
 
 // 初始化样式
@@ -60,7 +63,7 @@ const initStyle: CellStyle = {
   fill: {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: {}
+    fgColor: { argb: 'FFFFFFFF' }
   },
   border: {
     top: { style: 'thin', color: { argb: 'FF000000' } },
@@ -78,6 +81,8 @@ const mergeCoordinate = ref<[number, number, number, number][]>([])
 // 设置表格-数据驱动
 const setTableOption = () => {
   const tableCellDataCopy = JSON.parse(JSON.stringify(tableCellData.value))
+  border.value = tableOption.value.border
+  borderColor.value = tableOption.value.borderColor
   tableCellData.value = []
   for (let rowIndex = 0; tableOption.value.rows > rowIndex; rowIndex++) {
     tableCellData.value[rowIndex] = []
@@ -89,16 +94,16 @@ const setTableOption = () => {
       if (tableCellDataCopy[rowIndex] && tableCellDataCopy[rowIndex][colIndex]) {
         cellValue = tableCellDataCopy[rowIndex][colIndex].value
         cellStyle = tableCellDataCopy[rowIndex][colIndex].style
-        // 设置边框属性（公共部分）
-        cellStyle.border.top!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.right!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.bottom!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.left!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.top!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.right!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.bottom!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.left!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
       }
+      // 公共样式赋值部分
+      cellStyle.border.top!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.right!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.bottom!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.left!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.top!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.right!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.bottom!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.left!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
       // cellStyle.border = tableOption.value.borderColor
       tableCellData.value[rowIndex][colIndex] = {
         value: cellValue,
@@ -183,6 +188,21 @@ const createExcel = () => {
   downloadExcel(sheetDataListToExcel([temp]))
 }
 
+const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any => {
+  const style = {
+    top: rowIndex * 21 + 'px',
+    left: colIndex * 31 + 'px',
+    border: border.value ? '1px solid' : '',
+    borderColor,
+    color: argbHEXToRgba(cel.style?.font.color.argb),
+    fontSize: cel.style?.font.size + 'px',
+    textAlign: cel.style?.alignment.horizontal,
+    // @ts-ignore
+    backgroundColor: argbHEXToRgba(cel.style!.fill.fgColor.argb)
+  }
+  return style
+}
+
 </script>
 
 <template>
@@ -192,7 +212,8 @@ const createExcel = () => {
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
             @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)"
-            :style="{ top: rowIndex * 21 + 'px', left: colIndex * 31 + 'px' }">{{ cel.value
+            :style="styleCell(cel,rowIndex,colIndex)">
+            {{ cel.value
             }}</div>
         </div>
       </div>
@@ -247,6 +268,7 @@ const createExcel = () => {
   background-color: #ffffff;
   box-shadow: 0 2px 3px rgba(0, 0, 0, .1), 0 -1px 1px rgba(0, 0, 0, .1);
   z-index: 1000;
+
   .menu {
     padding: 3px 10px;
     cursor: pointer;
@@ -274,8 +296,6 @@ const createExcel = () => {
         height: 20px;
         min-width: 30px;
         width: max-content;
-        border-right: 1px solid #000;
-        border-bottom: 1px solid #000;
         cursor: pointer;
         user-select: none;
         background-color: #ffffff;

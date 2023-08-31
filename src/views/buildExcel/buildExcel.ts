@@ -245,7 +245,7 @@ function setDomStyle (cellData: TableCellData, cellDom: HTMLTableCellElement) {
   // 背景色
   const fgColor = rgbaToArgbHEX(getComputedStyle(cellDom).backgroundColor)
   if (fgColor !== '00000000') {
-    ;(cellData.style!.fill as ExcelJS.FillPattern).fgColor!.argb = fgColor
+    (cellData.style!.fill as ExcelJS.FillPattern).fgColor!.argb = fgColor
   }
   // 边框颜色
   cellData.style!.border.top!.color = {
@@ -292,8 +292,7 @@ export function mergeDownSheetData (
   for (let i = 0; i < sheetDataList.length; i++) {
     const sheet = sheetDataList[i]
     // 设置最大的表头
-    if (summarySheet.columnsCount < sheet.columnsCount)
-      summarySheet.columnsCount = sheet.columnsCount
+    if (summarySheet.columnsCount < sheet.columnsCount) summarySheet.columnsCount = sheet.columnsCount
     // 追加数据
     summarySheet.tableData = [...summarySheet.tableData, ...sheet.tableData]
     // 追加合并单元格数据
@@ -439,7 +438,10 @@ export function rgbaToArgbHEX (rgba: string) {
  * @param argb
  * @returns
  */
-export function argbHEXToRgba (argb: string) {
+export function argbHEXToRgba (argb: string | undefined) {
+  if (argb === undefined) {
+    return 'rgba(0,0,0,1)'
+  }
   const argbArray = []
   const argbArray10 = []
   for (let index = 0; index < argb.length; index = index + 2) {
