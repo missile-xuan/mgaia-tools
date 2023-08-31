@@ -121,12 +121,24 @@ const merge = () => {
   if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
     for (const item of mergeCoordinate.value) {
       if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
-        mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
-          return cell !== item
-        })
+        debugger
+        if (focusLastCell.value[1] + 1 >= item[3] && focusLastCell.value[0] + 1 >= item[2]) {
+          mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+            return cell !== item
+          })
+        } else {
+          console.log('无法合并单元格')
+          return 0
+        }
       }
     }
     mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
+    childNodesCols[focusCell.value[1] + 1].style.width = (focusLastCell.value[1] - focusCell.value[1] + 1) * 31 - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.height = (focusLastCell.value[0] - focusCell.value[0] + 1) * 21 - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.zIndex = '100'
     cancel()
     focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
   }
@@ -177,10 +189,11 @@ const createExcel = () => {
 <template>
   <div class="global-c-main-content">
     <div class="left" @click="cancel">
-      <div ref="table" @contextmenu.prevent>
+      <div class="table" ref="table" @contextmenu.prevent>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
-            @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)">{{ cel.value
+            @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)"
+            :style="{ top: rowIndex * 21 + 'px', left: colIndex * 31 + 'px' }">{{ cel.value
             }}</div>
         </div>
       </div>
@@ -254,18 +267,20 @@ const createExcel = () => {
     display: flex;
     justify-content: center;
 
-    .show-row {
-      display: flex;
-      justify-content: center;
-    }
+    .table {
+      position: relative;
 
-    .show-cell {
-      height: 20px;
-      min-width: 20px;
-      border-right: 1px solid #dcdfe6;
-      border-bottom: 1px solid #dcdfe6;
-      cursor: pointer;
-      user-select: none;
+      .show-cell {
+        position: absolute;
+        height: 20px;
+        min-width: 30px;
+        width: max-content;
+        border-right: 1px solid #000;
+        border-bottom: 1px solid #000;
+        cursor: pointer;
+        user-select: none;
+        background-color: #ffffff;
+      }
     }
   }
 
