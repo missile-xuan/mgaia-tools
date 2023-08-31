@@ -121,7 +121,6 @@ const merge = () => {
   if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
     for (const item of mergeCoordinate.value) {
       if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
-        debugger
         if (focusLastCell.value[1] + 1 >= item[3] && focusLastCell.value[0] + 1 >= item[2]) {
           mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
             return cell !== item
@@ -247,7 +246,7 @@ const createExcel = () => {
   border: 1px solid #ddd;
   background-color: #ffffff;
   box-shadow: 0 2px 3px rgba(0, 0, 0, .1), 0 -1px 1px rgba(0, 0, 0, .1);
-
+  z-index: 1000;
   .menu {
     padding: 3px 10px;
     cursor: pointer;
