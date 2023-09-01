@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
+
 // ========配置面板========
 // 表格公共配置
 const tableOption = ref({
@@ -14,6 +15,8 @@ const tableOption = ref({
 })
 const border = ref(true)
 const borderColor = ref('rgba(0, 0, 0, 1)')
+let rowsForComputed = 3
+let colsForComputed = 7
 
 // 单元格属性
 // 对齐方式
@@ -83,6 +86,8 @@ const setTableOption = () => {
   const tableCellDataCopy = JSON.parse(JSON.stringify(tableCellData.value))
   border.value = tableOption.value.border
   borderColor.value = tableOption.value.borderColor
+  rowsForComputed = tableOption.value.rows
+  colsForComputed = tableOption.value.cols
   tableCellData.value = []
   for (let rowIndex = 0; tableOption.value.rows > rowIndex; rowIndex++) {
     tableCellData.value[rowIndex] = []
@@ -188,10 +193,20 @@ const createExcel = () => {
   downloadExcel(sheetDataListToExcel([temp]))
 }
 
+const sum = (arr: number[], index: number) => {
+  let sumLeft = 0
+  for (index; index >= 0; index--) {
+    sumLeft += arr[index]
+  }
+  return sumLeft
+}
+
 const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any => {
   const style = {
-    top: rowIndex * 21 + 'px',
-    left: colIndex * 31 + 'px',
+    top: sum(maxHeight.value, rowIndex - 1) + 'px',
+    left: sum(maxWidth.value, colIndex - 1) + 'px',
+    width: maxWidth.value[colIndex] + 'px',
+    height: maxHeight.value[rowIndex] + 'px',
     border: border.value ? '1px solid' : '',
     borderColor: borderColor.value,
     color: argbHEXToRgba(cel.style?.font.color.argb),
@@ -203,6 +218,31 @@ const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any 
   return style
 }
 
+const maxWidth = computed(() => {
+  const maxList = []
+  for (let cols = 0; cols < colsForComputed; cols++) {
+    let maxLenth = 30
+    for (let rows = 0; rows < rowsForComputed; rows++) {
+      const temp = tableCellData.value[rows][cols].value!.toString().length * tableCellData.value[rows][cols].style!.font.size / 1.6
+      maxLenth = Math.max(maxLenth, temp)
+    }
+    maxList.push(maxLenth)
+  }
+  return maxList
+})
+const maxHeight = computed(() => {
+  const maxList = []
+  for (let rows = 0; rows < rowsForComputed; rows++) {
+    let maxLenth = 20
+    for (let cols = 0; cols < colsForComputed; cols++) {
+      const temp = tableCellData.value[rows][cols].style!.font.size + 6
+      maxLenth = Math.max(maxLenth, temp)
+    }
+    maxList.push(maxLenth)
+  }
+  return maxList
+})
+
 </script>
 
 <template>
@@ -212,7 +252,7 @@ const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any 
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
             @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)"
-            :style="styleCell(cel,rowIndex,colIndex)">
+            :style="styleCell(cel, rowIndex, colIndex)">
             {{ cel.value
             }}</div>
         </div>
@@ -295,7 +335,7 @@ const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any 
         position: absolute;
         height: 20px;
         min-width: 30px;
-        width: max-content;
+        // width: max-content;
         cursor: pointer;
         user-select: none;
         background-color: #ffffff;
