@@ -184,7 +184,12 @@ const computeMerge = () => {
 }
 
 const whetherMerge = (row: number, col: number) => {
-  return focusCell.value[0] <= row && focusCell.value[1] <= col && focusLastCell.value[0] >= row && focusLastCell.value[1] >= col
+  if (focusLastCell.value[0] === -1) return false
+  const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
+  const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
+  const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
+  const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
+  return tempfr <= row && tempfc <= col && templr >= row && templc >= col
 }
 
 // ========动作状态========
@@ -225,10 +230,13 @@ const merge = () => {
 
 // 是否正在拖拽
 let isDragging = false
-
+// 点击外部清空锁
+let clearLock = false
 const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   if (event.button === 0) {
+    cancel()
     isDragging = true
+    clearLock = true
     document.addEventListener('mouseup', mouseUp)
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
@@ -236,6 +244,7 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
     backgroundColor.value = ''
   } else if (event.button === 2) { // 鼠标右键菜单
     rightVisible.value = true
+    clearLock = false
     nextTick(() => {
       const x = event.clientX
       const y = event.clientY
@@ -247,15 +256,33 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
 // 鼠标松开
 const mouseUp = () => {
   isDragging = false
+  const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
+  const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
+  const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
+  const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
+  focusCell.value[0] = tempfr
+  focusCell.value[1] = tempfc
+  focusLastCell.value[0] = templr
+  focusLastCell.value[1] = templc
   document.removeEventListener('mouseup', mouseUp)
 }
-// 取消右键菜单
+// 取消选中
 const cancel = () => {
+  clearLock = false
   rightVisible.value = false
   if (!isDragging) {
     focusLastCell.value[0] = -1
     focusLastCell.value[1] = -1
   }
+}
+
+const unlock = () => {
+  clearLock = false
+}
+
+// 取消事件
+const cancelEvent = () => {
+  if (!clearLock) cancel()
 }
 
 // 移入移出鼠标样式
@@ -289,11 +316,11 @@ watch(tableCellData, () => {
 
 <template>
   <div class="global-c-main-content">
-    <div class="left" @mouseup="cancel">
+    <div class="left" @click="cancelEvent" @mousedown="unlock">
       <div class="table" ref="table" @contextmenu.prevent @click.stop>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div :class="['showCell', { merge: whetherMerge(rowIndex, colIndex) }]" v-for="(cel, colIndex) in row"
-            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)"
+            :key="rowIndex + ',' + colIndex" @mousedown.stop="mouseDown(rowIndex, colIndex, $event)"
             :style="styleCell(cel, rowIndex, colIndex)" @mouseenter="mouseenter(rowIndex, colIndex)">{{ cel.value }}</div>
         </div>
       </div>
