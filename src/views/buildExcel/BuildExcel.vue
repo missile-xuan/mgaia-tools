@@ -229,6 +229,7 @@ let isDragging = false
 const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   if (event.button === 0) {
     isDragging = true
+    document.addEventListener('mouseup', mouseUp)
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
     fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
@@ -246,12 +247,15 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
 // 鼠标松开
 const mouseUp = () => {
   isDragging = false
+  document.removeEventListener('mouseup', mouseUp)
 }
 // 取消右键菜单
 const cancel = () => {
   rightVisible.value = false
-  focusLastCell.value[0] = -1
-  focusLastCell.value[1] = -1
+  if (!isDragging) {
+    focusLastCell.value[0] = -1
+    focusLastCell.value[1] = -1
+  }
 }
 
 // 移入移出鼠标样式
@@ -285,11 +289,11 @@ watch(tableCellData, () => {
 
 <template>
   <div class="global-c-main-content">
-    <div class="left" @click="cancel">
+    <div class="left" @mouseup="cancel">
       <div class="table" ref="table" @contextmenu.prevent @click.stop>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div :class="['showCell', { merge: whetherMerge(rowIndex, colIndex) }]" v-for="(cel, colIndex) in row"
-            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp"
+            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)"
             :style="styleCell(cel, rowIndex, colIndex)" @mouseenter="mouseenter(rowIndex, colIndex)">{{ cel.value }}</div>
         </div>
       </div>
