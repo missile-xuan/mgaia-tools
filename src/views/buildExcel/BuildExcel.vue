@@ -35,7 +35,7 @@ const alignOptions = [{
 }]
 // 单元格配置（颜色）
 const fontColor = ref('rgba(1,1,1,1)')
-const backgroundColor = ref('rgba(0,0,0,0)')
+const backgroundColor = ref('rgba(255,255,255,1)')
 const changeFontColor = () => {
   tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
 }
@@ -215,7 +215,6 @@ const merge = () => {
     const childNodesRows = table.value.childNodes
     // 子元素第一位不是节点
     const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
-    debugger
     childNodesCols[focusCell.value[1] + 1].style.width = sum(maxWidth.value, focusCell.value[1], focusLastCell.value[1]) - 1 + 'px'
     childNodesCols[focusCell.value[1] + 1].style.height = sum(maxHeight.value, focusCell.value[0], focusLastCell.value[0]) - 1 + 'px'
     childNodesCols[focusCell.value[1] + 1].style.zIndex = childNodesCols[focusCell.value[1] + 1].style.zIndex ? childNodesCols[focusCell.value[1] + 1].style.zIndex.number + 100 : '100'
@@ -251,8 +250,8 @@ const mouseUp = () => {
 // 取消右键菜单
 const cancel = () => {
   rightVisible.value = false
-  // focusLastCell.value[0] = -1
-  // focusLastCell.value[1] = -1
+  focusLastCell.value[0] = -1
+  focusLastCell.value[1] = -1
 }
 
 // 移入移出鼠标样式
@@ -279,7 +278,6 @@ const sum = (arr: number[], first: number, index: number) => {
 }
 
 watch(tableCellData, () => {
-  debugger
   computeMerge()
 }, { deep: true })
 
@@ -288,10 +286,10 @@ watch(tableCellData, () => {
 <template>
   <div class="global-c-main-content">
     <div class="left" @click="cancel">
-      <div class="table" ref="table" @contextmenu.prevent>
+      <div class="table" ref="table" @contextmenu.prevent @click.stop>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
           <div :class="['showCell', { merge: whetherMerge(rowIndex, colIndex) }]" v-for="(cel, colIndex) in row"
-            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup.stop="mouseUp"
+            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp"
             :style="styleCell(cel, rowIndex, colIndex)" @mouseenter="mouseenter(rowIndex, colIndex)">{{ cel.value }}</div>
         </div>
       </div>
