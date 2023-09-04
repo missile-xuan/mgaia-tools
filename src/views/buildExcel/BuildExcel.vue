@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
 
@@ -13,6 +13,7 @@ const tableOption = ref({
   border: true,
   borderColor: 'rgba(0, 0, 0, 1)'
 })
+// 应用前暂存
 const border = ref(true)
 const borderColor = ref('rgba(0, 0, 0, 1)')
 let rowsForComputed = 3
@@ -119,94 +120,14 @@ const setTableOption = () => {
   }
 }
 setTableOption()
-// ========动作状态========
-// 当前焦点单元格
-const focusCell = ref([0, 0])
-const focusLastCell = ref([0, 0])
 
-// 右键内容
-const rightVisible = ref(false)
-const rightDiv = ref()
-const merge = () => {
-  if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
-    for (const item of mergeCoordinate.value) {
-      if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
-        if (focusLastCell.value[1] + 1 >= item[3] && focusLastCell.value[0] + 1 >= item[2]) {
-          mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
-            return cell !== item
-          })
-        } else {
-          console.log('无法合并单元格')
-          return 0
-        }
-      }
-    }
-    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
-    const childNodesRows = table.value.childNodes
-    // 子元素第一位不是节点
-    const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
-    childNodesCols[focusCell.value[1] + 1].style.width = (focusLastCell.value[1] - focusCell.value[1] + 1) * 31 - 1 + 'px'
-    childNodesCols[focusCell.value[1] + 1].style.height = (focusLastCell.value[0] - focusCell.value[0] + 1) * 21 - 1 + 'px'
-    childNodesCols[focusCell.value[1] + 1].style.zIndex = '100'
-    cancel()
-    focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
-  }
-}
-
-const table = ref()
-
-// 是否正在拖拽
-let isDragging = false
-
-const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
-  if (event.button === 0) {
-    isDragging = true
-    focusCell.value[0] = rowIndex
-    focusCell.value[1] = colIndex
-    fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
-    backgroundColor.value = ''
-  } else if (event.button === 2) {
-    rightVisible.value = true
-    nextTick(() => {
-      const x = event.clientX
-      const y = event.clientY
-      rightDiv.value.style.top = `${y}px`
-      rightDiv.value.style.left = `${x}px`
-    })
-  }
-}
-const cancel = () => {
-  rightVisible.value = false
-}
-const mouseUp = (rowIndex: number, colIndex: number, event: MouseEvent) => {
-  // 未拖拽状态 且非同一单元格 选中合并单元格末尾
-  if (isDragging && (focusCell.value[0] !== rowIndex || focusCell.value[1] !== colIndex)) {
-    isDragging = false
-    focusLastCell.value[0] = rowIndex
-    focusLastCell.value[1] = colIndex
-  }
-}
-
-// 计算单元格宽度
-const createExcel = () => {
-  const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
-  downloadExcel(sheetDataListToExcel([temp]))
-}
-
-const sum = (arr: number[], index: number) => {
-  let sumLeft = 0
-  for (index; index >= 0; index--) {
-    sumLeft += arr[index]
-  }
-  return sumLeft
-}
-
+// 动态单元格样式
 const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any => {
   const style = {
-    top: sum(maxHeight.value, rowIndex - 1) + 'px',
-    left: sum(maxWidth.value, colIndex - 1) + 'px',
-    width: maxWidth.value[colIndex] + 'px',
-    height: maxHeight.value[rowIndex] + 'px',
+    top: sum(maxHeight.value, 0, rowIndex - 1) + 'px',
+    left: sum(maxWidth.value, 0, colIndex - 1) + 'px',
+    minWidth: maxWidth.value[colIndex] + 'px',
+    minHeight: maxHeight.value[rowIndex] + 'px',
     border: border.value ? '1px solid' : '',
     borderColor: borderColor.value,
     color: argbHEXToRgba(cel.style?.font.color.argb),
@@ -218,6 +139,16 @@ const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any 
   return style
 }
 
+// const reSize = () => {
+//   const childNodesRows = table.value.childNodes
+//   // 子元素第一位不是节点
+//   debugger
+//   const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
+//   childNodesCols[focusCell.value[1] + 1].style.width = maxWidth.value[focusCell.value[1]] + 'px'
+//   childNodesCols[focusCell.value[1] + 1].style.height = maxHeight.value[focusCell.value[1]] + 'px'
+// }
+
+// 计算单元格最大宽度与最大高度 依据性能考虑是否节流
 const maxWidth = computed(() => {
   const maxList = []
   for (let cols = 0; cols < colsForComputed; cols++) {
@@ -242,6 +173,115 @@ const maxHeight = computed(() => {
   }
   return maxList
 })
+const computeMerge = () => {
+  for (const item of mergeCoordinate.value) {
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[item[0]].childNodes
+    childNodesCols[item[1]].style.width = sum(maxWidth.value, item[1] - 1, item[3] - 1) - 1 + 'px'
+    childNodesCols[item[1]].style.height = sum(maxHeight.value, item[0] - 1, item[2] - 1) - 1 + 'px'
+  }
+}
+
+const whetherMerge = (row: number, col: number) => {
+  return focusCell.value[0] <= row && focusCell.value[1] <= col && focusLastCell.value[0] >= row && focusLastCell.value[1] >= col
+}
+
+// ========动作状态========
+// 当前焦点单元格
+const focusCell = ref([0, 0])
+const focusLastCell = ref([-1, -1])
+const table = ref()
+
+// 右键菜单属性
+const rightVisible = ref(false)
+const rightDiv = ref()
+// 合并单元格
+const merge = () => {
+  if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
+    for (const item of mergeCoordinate.value) {
+      if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
+        if (focusLastCell.value[1] + 1 >= item[3] && focusLastCell.value[0] + 1 >= item[2]) {
+          mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+            return cell !== item
+          })
+        } else {
+          console.log('无法合并单元格')
+          return 0
+        }
+      }
+    }
+    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
+    debugger
+    childNodesCols[focusCell.value[1] + 1].style.width = sum(maxWidth.value, focusCell.value[1], focusLastCell.value[1]) - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.height = sum(maxHeight.value, focusCell.value[0], focusLastCell.value[0]) - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.zIndex = childNodesCols[focusCell.value[1] + 1].style.zIndex ? childNodesCols[focusCell.value[1] + 1].style.zIndex.number + 100 : '100'
+    cancel()
+    focusLastCell.value = [-1, -1]
+  }
+}
+
+// 是否正在拖拽
+let isDragging = false
+
+const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
+  if (event.button === 0) {
+    isDragging = true
+    focusCell.value[0] = rowIndex
+    focusCell.value[1] = colIndex
+    fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
+    backgroundColor.value = ''
+  } else if (event.button === 2) { // 鼠标右键菜单
+    rightVisible.value = true
+    nextTick(() => {
+      const x = event.clientX
+      const y = event.clientY
+      rightDiv.value.style.top = `${y}px`
+      rightDiv.value.style.left = `${x}px`
+    })
+  }
+}
+// 鼠标松开
+const mouseUp = () => {
+  isDragging = false
+}
+// 取消右键菜单
+const cancel = () => {
+  rightVisible.value = false
+  // focusLastCell.value[0] = -1
+  // focusLastCell.value[1] = -1
+}
+
+// 移入移出鼠标样式
+const mouseenter = (rowIndex: number, colIndex: number) => {
+  if (isDragging) {
+    focusLastCell.value[0] = rowIndex
+    focusLastCell.value[1] = colIndex
+  }
+}
+
+// 导出excel
+const createExcel = () => {
+  const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
+  downloadExcel(sheetDataListToExcel([temp]))
+}
+
+// 计算数组中前n个数之和
+const sum = (arr: number[], first: number, index: number) => {
+  let sumLeft = 0
+  for (index; index >= first; index--) {
+    sumLeft += arr[index]
+  }
+  return sumLeft
+}
+
+watch(tableCellData, () => {
+  debugger
+  computeMerge()
+}, { deep: true })
 
 </script>
 
@@ -250,11 +290,9 @@ const maxHeight = computed(() => {
     <div class="left" @click="cancel">
       <div class="table" ref="table" @contextmenu.prevent>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
-          <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
-            @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)"
-            :style="styleCell(cel, rowIndex, colIndex)">
-            {{ cel.value
-            }}</div>
+          <div :class="['showCell', { merge: whetherMerge(rowIndex, colIndex) }]" v-for="(cel, colIndex) in row"
+            :key="rowIndex + ',' + colIndex" @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup.stop="mouseUp"
+            :style="styleCell(cel, rowIndex, colIndex)" @mouseenter="mouseenter(rowIndex, colIndex)">{{ cel.value }}</div>
         </div>
       </div>
     </div>
@@ -331,7 +369,7 @@ const maxHeight = computed(() => {
     .table {
       position: relative;
 
-      .show-cell {
+      .showCell {
         position: absolute;
         height: 20px;
         min-width: 30px;
@@ -339,6 +377,10 @@ const maxHeight = computed(() => {
         cursor: pointer;
         user-select: none;
         background-color: #ffffff;
+      }
+
+      .merge {
+        background-color: #4e4e4e !important
       }
     }
   }
