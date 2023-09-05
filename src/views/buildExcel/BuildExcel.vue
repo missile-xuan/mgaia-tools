@@ -241,7 +241,8 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
     fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
-    backgroundColor.value = ''
+    // @ts-ignore
+    backgroundColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.fill.fgColor.argb!)
   } else if (event.button === 2) { // 鼠标右键菜单
     rightVisible.value = true
     clearLock = false
@@ -256,14 +257,16 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
 // 鼠标松开
 const mouseUp = () => {
   isDragging = false
-  const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
-  const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
-  const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
-  const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
-  focusCell.value[0] = tempfr
-  focusCell.value[1] = tempfc
-  focusLastCell.value[0] = templr
-  focusLastCell.value[1] = templc
+  if (focusLastCell.value[0] !== -1) {
+    const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
+    const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
+    const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
+    const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
+    focusCell.value[0] = tempfr
+    focusCell.value[1] = tempfc
+    focusLastCell.value[0] = templr
+    focusLastCell.value[1] = templc
+  }
   document.removeEventListener('mouseup', mouseUp)
 }
 // 取消选中
