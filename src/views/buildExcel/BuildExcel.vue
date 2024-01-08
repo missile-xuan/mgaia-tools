@@ -173,6 +173,8 @@ const maxHeight = computed(() => {
   }
   return maxList
 })
+
+// 计算合并后单元格
 const computeMerge = () => {
   for (const item of mergeCoordinate.value) {
     const childNodesRows = table.value.childNodes
@@ -211,7 +213,7 @@ const merge = () => {
             return cell !== item
           })
         } else {
-          console.log('无法合并单元格')
+          console.log('无法合并单元格,可尝试撤销合并的单元格以重新合并')
           return 0
         }
       }
@@ -225,6 +227,28 @@ const merge = () => {
     childNodesCols[focusCell.value[1] + 1].style.zIndex = childNodesCols[focusCell.value[1] + 1].style.zIndex ? childNodesCols[focusCell.value[1] + 1].style.zIndex.number + 100 : '100'
     cancel()
     focusLastCell.value = [-1, -1]
+  }
+}
+
+// 解除合并单元格
+const unMerge = (payload: MouseEvent, firstCellRow?: number, firstCellCol?: number) => {
+  let unMergeRow: number
+  let unMergeCol: number
+  firstCellRow ? unMergeRow = firstCellRow : unMergeRow = focusCell.value[0]
+  firstCellCol ? unMergeCol = firstCellCol : unMergeCol = focusCell.value[1]
+  for (const item of mergeCoordinate.value) {
+    if (unMergeRow + 1 === item[0] && unMergeCol + 1 === item[1]) {
+      mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+        return cell !== item
+      })
+    }
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[unMergeRow + 1].childNodes
+    childNodesCols[unMergeCol + 1].style.width = ''
+    childNodesCols[unMergeCol + 1].style.height = ''
+    childNodesCols[unMergeCol + 1].style.zIndex = ''
+    cancel()
   }
 }
 
@@ -364,7 +388,7 @@ watch(tableCellData, () => {
   </div>
   <div ref="rightDiv" class="rightDiv" v-if="rightVisible">
     <div class='menu' @click="merge">合并单元格</div>
-    <div class='menu' @click="merge">撤销</div>
+    <div class='menu' @click="unMerge">撤销</div>
     <div class='menu' @click="createExcel">生成</div>
   </div>
 </template>
