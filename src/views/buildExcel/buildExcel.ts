@@ -77,7 +77,9 @@ export function tableDomToSheetData (
 
       // 添加当前数据格子
       // 如果当前位置被挤占向后偏移
-      while (!lodash.isNil(tableData[tri][addTdI])) { addTdI++ }
+      while (!lodash.isNil(tableData[tri][addTdI])) {
+        addTdI++
+      }
       // 设置当前数据
       tableData[tri][addTdI] = {
         value: tdList[tdi].textContent,
@@ -146,7 +148,7 @@ export function tableDomToSheetData (
 }
 
 export interface JsonData {
-  [key:string]:string|number,
+  [key: string]: string | number
 }
 /**
  * json数据转SheetData
@@ -156,11 +158,11 @@ export interface JsonData {
  * @returns ExcelJS.Workbook
  */
 export function jsonToSheetData (
-  selectedList:string[],
-  jsonData:JsonData[],
+  selectedList: string[],
+  jsonData: JsonData[],
   sheetName: string = 'sheet1'
 ) {
-  const sheetData:SheetData = {
+  const sheetData: SheetData = {
     sheetName,
     mergeCoordinate: [],
     tableData: [],
@@ -168,7 +170,7 @@ export function jsonToSheetData (
   }
   // 创建工作簿
   for (const data of jsonData) {
-    const rowData:TableCellData[] = []
+    const rowData: TableCellData[] = []
     for (const key of selectedList) {
       rowData.push({
         value: data[key]
@@ -236,17 +238,27 @@ function setDomStyle (cellData: TableCellData, cellDom: HTMLTableCellElement) {
     cellData.style!.font.bold = true
   }
   // 字体颜色
-  cellData.style!.font.color.argb = rgbaToArgbHEX(getComputedStyle(cellDom).color)
+  cellData.style!.font.color.argb = rgbaToArgbHEX(
+    getComputedStyle(cellDom).color
+  )
   // 背景色
   const fgColor = rgbaToArgbHEX(getComputedStyle(cellDom).backgroundColor)
   if (fgColor !== '00000000') {
     (cellData.style!.fill as ExcelJS.FillPattern).fgColor!.argb = fgColor
   }
   // 边框颜色
-  cellData.style!.border.top!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
-  cellData.style!.border.right!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
-  cellData.style!.border.bottom!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
-  cellData.style!.border.left!.color = { argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor) }
+  cellData.style!.border.top!.color = {
+    argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor)
+  }
+  cellData.style!.border.right!.color = {
+    argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor)
+  }
+  cellData.style!.border.bottom!.color = {
+    argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor)
+  }
+  cellData.style!.border.left!.color = {
+    argb: rgbaToArgbHEX(getComputedStyle(cellDom).borderLeftColor)
+  }
   // 对齐样式
   // @ts-ignore
   cellData.style!.alignment.horizontal = getComputedStyle(cellDom).textAlign
@@ -332,7 +344,8 @@ export function mergeRightSheetData (
         // 注意不能直接向后追加 因为行数据不一定齐
         for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
           // 注意要加columnOffest偏移
-          summarySheet.tableData[rowIndex][columnOffest + cellIndex] = row[cellIndex]
+          summarySheet.tableData[rowIndex][columnOffest + cellIndex] =
+            row[cellIndex]
         }
       }
     }
@@ -401,11 +414,13 @@ export function sheetDataListToExcel (sheetDataList: SheetData[]) {
 export function rgbaToArgbHEX (rgba: string) {
   let result = ''
   const reg = /\(.*\)/ // 字符串匹配括号内的子串
-  let rgbaArr:(string)[] = []
+  let rgbaArr: string[] = []
   result = reg.exec(rgba)![0] // 截取'(255,255,255,0.6)'
   result = result.substr(1, result.length - 2) // 截取十进制的'255,255,255,0.6'
   rgbaArr = result.split(',') // 字符串切割 ['255','255','255','0.6']
-  const a = Math.floor(parseFloat(rgbaArr[3] ? rgbaArr[3] : '0') * 255).toString(16)
+  const a = Math.floor(
+    parseFloat(rgbaArr[3] ? rgbaArr[3] : '0') * 255
+  ).toString(16)
   const r = parseFloat(rgbaArr[0]).toString(16)
   const g = parseFloat(rgbaArr[1]).toString(16)
   const b = parseFloat(rgbaArr[2]).toString(16)
@@ -415,6 +430,37 @@ export function rgbaToArgbHEX (rgba: string) {
     parseInt(g) < 10 ? '0' + g : g,
     parseInt(b) < 10 ? '0' + b : b
   ].join('')
+}
+
+/**
+ * 将rgba十六进制表示的argb转换为rgba
+ * @param argb
+ * @returns
+ */
+export function argbHEXToRgba (argb: string | undefined) {
+  if (argb === undefined) {
+    return 'rgba(0,0,0,1)'
+  }
+  const argbArray = []
+  const argbArray10 = []
+  for (let index = 0; index < argb.length; index = index + 2) {
+    argbArray.push(argb.substring(index, index + 2))
+  }
+  for (const item of argbArray) {
+    console.log(item)
+    let temp = 0
+    for (let i = 0; i < 2; i++) {
+      let code = item.charCodeAt(i)
+      if (code >= 48 && code < 58) {
+        code -= 48
+      } else {
+        code = (code & 0xdf) - 65 + 10
+      }
+      temp = temp * 16 + code
+    }
+    argbArray10.push(temp)
+  }
+  return `rgba(${argbArray10[1]},${argbArray10[2]},${argbArray10[3]},${argbArray10[0] / 255})`
 }
 
 /**
@@ -435,7 +481,7 @@ function setCellStyle (cell: ExcelJS.Cell, style?: CellStyle) {
   //   debugger
   // }
   if (lodash.isNil(nowColWidth)) nowColWidth = 0
-  let cellWidth = cell.text.length * style.font.size / 4
+  let cellWidth = (cell.text.length * style.font.size) / 4
   if (cellWidth < 6) cellWidth = 6
   if (nowColWidth < cellWidth) {
     cell.worksheet.getColumn(cell.col).width = cellWidth
@@ -466,7 +512,10 @@ export function tableDomToExcel (
  * 导出excel下载
  * @param workbook ExcelJS.Workbook
  */
-export async function downloadExcel (workbook: ExcelJS.Workbook, name:string = 'exceljs') {
+export async function downloadExcel (
+  workbook: ExcelJS.Workbook,
+  name: string = 'exceljs'
+) {
   // 导出
   const buffer = await workbook.xlsx.writeBuffer()
   const blob = new Blob([buffer])
