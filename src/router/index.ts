@@ -41,6 +41,14 @@ const router = createRouter({
           }
         },
         {
+          path: '/buildExcelDemo',
+          name: 'BuildExcelDemo',
+          component: () => import('@/views/buildExcel/BuildExcelDemo.vue'),
+          meta: {
+            title: 'excel导出demo'
+          }
+        },
+        {
           path: '/jsonFormat',
           name: 'JsonFormat',
           component: () => import('@/views/jsonFormat/JsonFormat.vue'),

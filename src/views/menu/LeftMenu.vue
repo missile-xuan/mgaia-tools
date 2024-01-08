@@ -24,6 +24,10 @@ const menuGroupList = [
         path: '/buildExcel'
       },
       {
+        menuName: '数据导出excelDemo',
+        path: '/buildExcelDemo'
+      },
+      {
         menuName: '图片压缩',
         path: '/compressionImage'
       },
