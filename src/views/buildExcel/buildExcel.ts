@@ -204,8 +204,7 @@ function initCellDataStyle (cellData: TableCellData) {
         outline: false
       },
       alignment: {
-        vertical: 'middle',
-        horizontal: 'left'
+        vertical: 'middle', horizontal: 'left', wrapText: true // 增加自动换行属性 解决双击才会换行问题
       },
       fill: {
         type: 'pattern',
