@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
-import { nextTick, ref } from 'vue'
-import { downloadExcel, rgbaToArgbHEX, sheetDataListToExcel } from './buildExcel'
+import { computed, nextTick, ref, watch } from 'vue'
+import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel } from './buildExcel'
 import type { TableCellData, CellStyle } from './buildExcel'
+
 // ========配置面板========
 // 表格公共配置
 const tableOption = ref({
@@ -12,6 +13,11 @@ const tableOption = ref({
   border: true,
   borderColor: 'rgba(0, 0, 0, 1)'
 })
+// 应用前暂存
+const border = ref(true)
+const borderColor = ref('rgba(0, 0, 0, 1)')
+let rowsForComputed = 3
+let colsForComputed = 7
 
 // 单元格属性
 // 对齐方式
@@ -28,13 +34,14 @@ const alignOptions = [{
   label: 'right'
 }]
 // 单元格配置（颜色）
-const fontColor = ref()
-const backgroundColor = ref()
+const fontColor = ref('rgba(1,1,1,1)')
+const backgroundColor = ref('rgba(255,255,255,1)')
 const changeFontColor = () => {
   tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(fontColor.value) }
 }
 const changeBackgroundColor = () => {
-  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color = { argb: rgbaToArgbHEX(backgroundColor.value) }
+  // @ts-ignore
+  tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.fill.fgColor = { argb: rgbaToArgbHEX(backgroundColor.value) }
 }
 
 // 初始化样式
@@ -46,7 +53,7 @@ const initStyle: CellStyle = {
     family: 2,
     scheme: 'minor',
     charset: 1,
-    color: { argb: 'FFFF0000' },
+    color: { argb: 'FF000000' },
     bold: false,
     italic: false,
     underline: false,
@@ -60,7 +67,7 @@ const initStyle: CellStyle = {
   fill: {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: {}
+    fgColor: { argb: 'FFFFFFFF' }
   },
   border: {
     top: { style: 'thin', color: { argb: 'FF000000' } },
@@ -78,6 +85,10 @@ const mergeCoordinate = ref<[number, number, number, number][]>([])
 // 设置表格-数据驱动
 const setTableOption = () => {
   const tableCellDataCopy = JSON.parse(JSON.stringify(tableCellData.value))
+  border.value = tableOption.value.border
+  borderColor.value = tableOption.value.borderColor
+  rowsForComputed = tableOption.value.rows
+  colsForComputed = tableOption.value.cols
   tableCellData.value = []
   for (let rowIndex = 0; tableOption.value.rows > rowIndex; rowIndex++) {
     tableCellData.value[rowIndex] = []
@@ -89,16 +100,16 @@ const setTableOption = () => {
       if (tableCellDataCopy[rowIndex] && tableCellDataCopy[rowIndex][colIndex]) {
         cellValue = tableCellDataCopy[rowIndex][colIndex].value
         cellStyle = tableCellDataCopy[rowIndex][colIndex].style
-        // 设置边框属性（公共部分）
-        cellStyle.border.top!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.right!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.bottom!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.left!.style = tableOption.value.border ? 'thin' : undefined
-        cellStyle.border.top!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.right!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.bottom!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
-        cellStyle.border.left!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
       }
+      // 公共样式赋值部分
+      cellStyle.border.top!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.right!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.bottom!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.left!.style = tableOption.value.border ? 'thin' : undefined
+      cellStyle.border.top!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.right!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.bottom!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
+      cellStyle.border.left!.color = { argb: rgbaToArgbHEX(tableOption.value.borderColor) }
       // cellStyle.border = tableOption.value.borderColor
       tableCellData.value[rowIndex][colIndex] = {
         value: cellValue,
@@ -109,38 +120,156 @@ const setTableOption = () => {
   }
 }
 setTableOption()
-// ========动作状态========
-// 当前焦点单元格
-const focusCell = ref([0, 0])
-const focusLastCell = ref([0, 0])
 
-// 右键内容
-const rightVisible = ref(false)
-const rightDiv = ref()
-const merge = () => {
-  if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
-    debugger
-    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
-    cancel()
-    focusLastCell.value = [focusCell.value[0], focusCell.value[1]]
+// 动态单元格样式
+const styleCell = (cel: TableCellData, rowIndex: number, colIndex: number): any => {
+  const style = {
+    top: sum(maxHeight.value, 0, rowIndex - 1) + 'px',
+    left: sum(maxWidth.value, 0, colIndex - 1) + 'px',
+    minWidth: maxWidth.value[colIndex] + 'px',
+    minHeight: maxHeight.value[rowIndex] + 'px',
+    border: border.value ? '1px solid' : '',
+    borderColor: borderColor.value,
+    color: argbHEXToRgba(cel.style?.font.color.argb),
+    fontSize: cel.style?.font.size + 'px',
+    textAlign: cel.style?.alignment.horizontal,
+    // @ts-ignore
+    backgroundColor: argbHEXToRgba(cel.style!.fill.fgColor.argb)
+  }
+  return style
+}
+
+// const reSize = () => {
+//   const childNodesRows = table.value.childNodes
+//   // 子元素第一位不是节点
+//   debugger
+//   const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
+//   childNodesCols[focusCell.value[1] + 1].style.width = maxWidth.value[focusCell.value[1]] + 'px'
+//   childNodesCols[focusCell.value[1] + 1].style.height = maxHeight.value[focusCell.value[1]] + 'px'
+// }
+
+// 计算单元格最大宽度与最大高度 依据性能考虑是否节流
+const maxWidth = computed(() => {
+  const maxList = []
+  for (let cols = 0; cols < colsForComputed; cols++) {
+    let maxLenth = 30
+    for (let rows = 0; rows < rowsForComputed; rows++) {
+      const temp = tableCellData.value[rows][cols].value!.toString().length * tableCellData.value[rows][cols].style!.font.size / 1.6
+      maxLenth = Math.max(maxLenth, temp)
+    }
+    maxList.push(maxLenth)
+  }
+  return maxList
+})
+const maxHeight = computed(() => {
+  const maxList = []
+  for (let rows = 0; rows < rowsForComputed; rows++) {
+    let maxLenth = 20
+    for (let cols = 0; cols < colsForComputed; cols++) {
+      const temp = tableCellData.value[rows][cols].style!.font.size + 6
+      maxLenth = Math.max(maxLenth, temp)
+    }
+    maxList.push(maxLenth)
+  }
+  return maxList
+})
+
+// 计算合并后单元格
+const computeMerge = () => {
+  for (const item of mergeCoordinate.value) {
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[item[0]].childNodes
+    childNodesCols[item[1]].style.width = sum(maxWidth.value, item[1] - 1, item[3] - 1) - 1 + 'px'
+    childNodesCols[item[1]].style.height = sum(maxHeight.value, item[0] - 1, item[2] - 1) - 1 + 'px'
   }
 }
 
+const whetherMerge = (row: number, col: number) => {
+  if (focusLastCell.value[0] === -1) return false
+  const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
+  const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
+  const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
+  const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
+  return tempfr <= row && tempfc <= col && templr >= row && templc >= col
+}
+
+// ========动作状态========
+// 当前焦点单元格
+const focusCell = ref([0, 0])
+const focusLastCell = ref([-1, -1])
 const table = ref()
+
+// 右键菜单属性
+const rightVisible = ref(false)
+const rightDiv = ref()
+// 合并单元格
+const merge = () => {
+  if (!(focusCell.value[0] === focusLastCell.value[0] && focusCell.value[1] === focusLastCell.value[1])) {
+    for (const item of mergeCoordinate.value) {
+      if (focusCell.value[0] + 1 === item[0] && focusCell.value[1] + 1 === item[1]) {
+        if (focusLastCell.value[1] + 1 >= item[3] && focusLastCell.value[0] + 1 >= item[2]) {
+          mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+            return cell !== item
+          })
+        } else {
+          console.log('无法合并单元格,可尝试撤销合并的单元格以重新合并')
+          return 0
+        }
+      }
+    }
+    mergeCoordinate.value.push([focusCell.value[0] + 1, focusCell.value[1] + 1, focusLastCell.value[0] + 1, focusLastCell.value[1] + 1])
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[focusCell.value[0] + 1].childNodes
+    childNodesCols[focusCell.value[1] + 1].style.width = sum(maxWidth.value, focusCell.value[1], focusLastCell.value[1]) - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.height = sum(maxHeight.value, focusCell.value[0], focusLastCell.value[0]) - 1 + 'px'
+    childNodesCols[focusCell.value[1] + 1].style.zIndex = childNodesCols[focusCell.value[1] + 1].style.zIndex ? childNodesCols[focusCell.value[1] + 1].style.zIndex.number + 100 : '100'
+    cancel()
+    focusLastCell.value = [-1, -1]
+  }
+}
+
+// 解除合并单元格
+const unMerge = (payload: MouseEvent, firstCellRow?: number, firstCellCol?: number) => {
+  let unMergeRow: number
+  let unMergeCol: number
+  firstCellRow ? unMergeRow = firstCellRow : unMergeRow = focusCell.value[0]
+  firstCellCol ? unMergeCol = firstCellCol : unMergeCol = focusCell.value[1]
+  for (const item of mergeCoordinate.value) {
+    if (unMergeRow + 1 === item[0] && unMergeCol + 1 === item[1]) {
+      mergeCoordinate.value = mergeCoordinate.value.filter((cell) => {
+        return cell !== item
+      })
+    }
+    const childNodesRows = table.value.childNodes
+    // 子元素第一位不是节点
+    const childNodesCols = childNodesRows[unMergeRow + 1].childNodes
+    childNodesCols[unMergeCol + 1].style.width = ''
+    childNodesCols[unMergeCol + 1].style.height = ''
+    childNodesCols[unMergeCol + 1].style.zIndex = ''
+    cancel()
+  }
+}
 
 // 是否正在拖拽
 let isDragging = false
-
+// 点击外部清空锁
+let clearLock = false
 const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
   if (event.button === 0) {
+    cancel()
     isDragging = true
-    debugger
+    clearLock = true
+    document.addEventListener('mouseup', mouseUp)
     focusCell.value[0] = rowIndex
     focusCell.value[1] = colIndex
-    fontColor.value = tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color
-    backgroundColor.value = ''
-  } else if (event.button === 2) {
+    fontColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.font.color.argb!)
+    // @ts-ignore
+    backgroundColor.value = argbHEXToRgba(tableCellData.value[focusCell.value[0]][focusCell.value[1]].style!.fill.fgColor.argb!)
+  } else if (event.button === 2) { // 鼠标右键菜单
     rightVisible.value = true
+    clearLock = false
     nextTick(() => {
       const x = event.clientX
       const y = event.clientY
@@ -149,34 +278,77 @@ const mouseDown = (rowIndex: number, colIndex: number, event: MouseEvent) => {
     })
   }
 }
-const cancel = () => {
-  rightVisible.value = false
+// 鼠标松开
+const mouseUp = () => {
+  isDragging = false
+  if (focusLastCell.value[0] !== -1) {
+    const tempfr = Math.min(focusCell.value[0], focusLastCell.value[0])
+    const tempfc = Math.min(focusCell.value[1], focusLastCell.value[1])
+    const templr = Math.max(focusCell.value[0], focusLastCell.value[0])
+    const templc = Math.max(focusCell.value[1], focusLastCell.value[1])
+    focusCell.value[0] = tempfr
+    focusCell.value[1] = tempfc
+    focusLastCell.value[0] = templr
+    focusLastCell.value[1] = templc
+  }
+  document.removeEventListener('mouseup', mouseUp)
 }
-const mouseUp = (rowIndex: number, colIndex: number, event: MouseEvent) => {
-  // 未拖拽状态 且非同一单元格 选中合并单元格末尾
-  if (isDragging && (focusCell.value[0] !== rowIndex || focusCell.value[1] !== colIndex)) {
-    isDragging = false
+// 取消选中
+const cancel = () => {
+  clearLock = false
+  rightVisible.value = false
+  if (!isDragging) {
+    focusLastCell.value[0] = -1
+    focusLastCell.value[1] = -1
+  }
+}
+
+const unlock = () => {
+  clearLock = false
+}
+
+// 取消事件
+const cancelEvent = () => {
+  if (!clearLock) cancel()
+}
+
+// 移入移出鼠标样式
+const mouseenter = (rowIndex: number, colIndex: number) => {
+  if (isDragging) {
     focusLastCell.value[0] = rowIndex
     focusLastCell.value[1] = colIndex
   }
 }
 
-// 计算单元格宽度
+// 导出excel
 const createExcel = () => {
   const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
   downloadExcel(sheetDataListToExcel([temp]))
 }
 
+// 计算数组中前n个数之和
+const sum = (arr: number[], first: number, index: number) => {
+  let sumLeft = 0
+  for (index; index >= first; index--) {
+    sumLeft += arr[index]
+  }
+  return sumLeft
+}
+
+watch(tableCellData, () => {
+  computeMerge()
+}, { deep: true })
+
 </script>
 
 <template>
   <div class="global-c-main-content">
-    <div class="left" @click="cancel">
-      <div ref="table" @contextmenu.prevent>
+    <div class="left" @click="cancelEvent" @mousedown="unlock">
+      <div class="table" ref="table" @contextmenu.prevent @click.stop>
         <div class="show-row" v-for="(row, rowIndex) in tableCellData" :key="rowIndex">
-          <div class="show-cell" v-for="(cel, colIndex) in row" :key="rowIndex + ',' + colIndex"
-            @mousedown="mouseDown(rowIndex, colIndex, $event)" @mouseup="mouseUp(rowIndex, colIndex, $event)">{{ cel.value
-            }}</div>
+          <div :class="['showCell', { merge: whetherMerge(rowIndex, colIndex) }]" v-for="(cel, colIndex) in row"
+            :key="rowIndex + ',' + colIndex" @mousedown.stop="mouseDown(rowIndex, colIndex, $event)"
+            :style="styleCell(cel, rowIndex, colIndex)" @mouseenter="mouseenter(rowIndex, colIndex)">{{ cel.value }}</div>
         </div>
       </div>
     </div>
@@ -216,7 +388,7 @@ const createExcel = () => {
   </div>
   <div ref="rightDiv" class="rightDiv" v-if="rightVisible">
     <div class='menu' @click="merge">合并单元格</div>
-    <div class='menu' @click="merge">撤销</div>
+    <div class='menu' @click="unMerge">撤销</div>
     <div class='menu' @click="createExcel">生成</div>
   </div>
 </template>
@@ -229,6 +401,7 @@ const createExcel = () => {
   border: 1px solid #ddd;
   background-color: #ffffff;
   box-shadow: 0 2px 3px rgba(0, 0, 0, .1), 0 -1px 1px rgba(0, 0, 0, .1);
+  z-index: 1000;
 
   .menu {
     padding: 3px 10px;
@@ -249,18 +422,22 @@ const createExcel = () => {
     display: flex;
     justify-content: center;
 
-    .show-row {
-      display: flex;
-      justify-content: center;
-    }
+    .table {
+      position: relative;
 
-    .show-cell {
-      height: 20px;
-      min-width: 20px;
-      border-right: 1px solid #dcdfe6;
-      border-bottom: 1px solid #dcdfe6;
-      cursor: pointer;
-      user-select: none;
+      .showCell {
+        position: absolute;
+        height: 20px;
+        min-width: 30px;
+        // width: max-content;
+        cursor: pointer;
+        user-select: none;
+        background-color: #ffffff;
+      }
+
+      .merge {
+        background-color: #4e4e4e !important
+      }
     }
   }
 
