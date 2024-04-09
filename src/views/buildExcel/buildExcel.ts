@@ -123,7 +123,6 @@ export function tableDomToSheetData (
     const rowData = []
     for (const colIndex in tableData[rowIndex]) {
       rowData.push(tableData[rowIndex][colIndex]?.value)
-      console.log()
       if (
         tableData[rowIndex][colIndex].colSpan !== 1 ||
         tableData[rowIndex][colIndex].rowSpan !== 1
@@ -233,7 +232,6 @@ function setDomStyle (cellData: TableCellData, cellDom: HTMLTableCellElement) {
   // 字体大小
   cellData.style!.font.size = parseInt(getComputedStyle(cellDom).fontSize)
   // 加粗
-  console.log(cellDom.style)
   if (parseInt(getComputedStyle(cellDom).fontWeight) > 500) {
     cellData.style!.font.bold = true
   }
