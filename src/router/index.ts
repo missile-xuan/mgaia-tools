@@ -87,6 +87,14 @@ const router = createRouter({
           meta: {
             title: '屏幕录制'
           }
+        },
+        {
+          path: '/test',
+          name: 'Test',
+          component: () => import('@/views/test/Test.vue'),
+          meta: {
+            title: '测试页'
+          }
         }
       ]
     }

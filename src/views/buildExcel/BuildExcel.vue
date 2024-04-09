@@ -325,6 +325,10 @@ const createExcel = () => {
   const temp = { sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols }
   downloadExcel(sheetDataListToExcel([temp]))
 }
+// 输出json
+const outJson = () => {
+  console.log({ sheetName: 'test', mergeCoordinate: mergeCoordinate.value, tableData: tableCellData.value, columnsCount: tableOption.value.cols })
+}
 
 // 计算数组中前n个数之和
 const sum = (arr: number[], first: number, index: number) => {
@@ -390,6 +394,7 @@ watch(tableCellData, () => {
     <div class='menu' @click="merge">合并单元格</div>
     <div class='menu' @click="unMerge">撤销</div>
     <div class='menu' @click="createExcel">生成</div>
+    <div class='menu' @click="outJson">控制台输出json</div>
   </div>
 </template>
 
@@ -420,7 +425,7 @@ watch(tableCellData, () => {
     flex-grow: 1;
     background-color: aqua;
     display: flex;
-    justify-content: center;
+    justify-content: left;
 
     .table {
       position: relative;
