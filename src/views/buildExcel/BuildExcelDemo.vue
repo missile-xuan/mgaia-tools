@@ -4,16 +4,28 @@ import TableCount from './TableCount.vue'
 import * as ExcelJS from 'exceljs'
 // import lodash from 'lodash'
 import { ref } from 'vue'
-import { jsonToSheetData, sheetDataListToExcel, mergeDownSheetData, mergeRightSheetData, tableDomToSheetData, tableDomToExcel, downloadExcel } from './buildExcel'
+import {
+  jsonToSheetData,
+  sheetDataListToExcel,
+  mergeDownSheetData,
+  mergeRightSheetData,
+  tableDomToSheetData,
+  tableDomToExcel,
+  downloadExcel
+} from './buildExcel'
 // 构建excel
 const testTableData = [
   { id: 1, name: 'a', data: 'aa' },
   { id: 2, name: 'b', data: 'bb' },
   { id: 3, name: 'c', data: 'cc' },
-  { id: 4, name: '超长测试', data: 'c超长测试超长测试超长测试超长测试超长测试超长测试超长测试超长测试' }
+  {
+    id: 4,
+    name: '超长测试',
+    data: 'c超长测试超长测试超长测试超长测试超长测试超长测试超长测试超长测试'
+  }
 ]
 
-const spanMethod = ({ row, column, rowIndex, columnIndex }:any) => {
+const spanMethod = ({ row, column, rowIndex, columnIndex }: any) => {
   if (rowIndex % 2 === 0) {
     if (columnIndex === 0) {
       return [1, 2]
@@ -25,14 +37,20 @@ const spanMethod = ({ row, column, rowIndex, columnIndex }:any) => {
 
 // /////////////////////////////////
 interface HTMLElementPlus extends HTMLElement {
-  $el:HTMLElement
+  $el: HTMLElement
 }
 const tabeDiv = ref<HTMLElementPlus>()
 
 // 导出eltable表格测试
 const build1 = () => {
-  const headerSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__header')!, true)
-  const dataSheet = tableDomToSheetData(tabeDiv.value!.$el!.querySelector('.el-table__body')!, true)
+  const headerSheet = tableDomToSheetData(
+    tabeDiv.value!.$el!.querySelector('.el-table__header')!,
+    true
+  )
+  const dataSheet = tableDomToSheetData(
+    tabeDiv.value!.$el!.querySelector('.el-table__body')!,
+    true
+  )
   const sheet = mergeDownSheetData([headerSheet, dataSheet])
   console.log(sheet)
   downloadExcel(sheetDataListToExcel([sheet]))
@@ -102,40 +120,66 @@ const jsonExcelBuild = () => {
 
 <template>
   <div class="global-c-main-content">
-    <el-table ref="tabeDiv" :data="testTableData" style="width: 100%" :span-method="spanMethod" border>
-      <el-table-column align="center" prop="id" label="编号编号编号编号编号" width="180" />
-      <el-table-column align="center" label="多级嵌套表头测试" >
+    <el-table
+      ref="tabeDiv"
+      :data="testTableData"
+      style="width: 100%"
+      :span-method="spanMethod"
+      border
+    >
+      <el-table-column
+        align="center"
+        prop="id"
+        label="编号编号编号编号编号"
+        width="180"
+      />
+      <el-table-column align="center" label="多级嵌套表头测试">
         <el-table-column prop="name" label="名称" width="180" />
         <el-table-column prop="data" label="数据" />
       </el-table-column>
     </el-table>
-    <el-button type="primary"  @click="build1">导出eltable测试</el-button>
+    <el-button type="primary" @click="build1">导出eltable测试</el-button>
     <table id="textTable">
-      <tr>
-        <td >1</td><td  rowspan="2" colspan="2">a</td><td>aaa</td><td  rowspan="2" colspan="2">2</td><td>2</td><td>2</td><td>2</td>
-      </tr>
-      <tr>
-        <td  >b</td><td>bbb</td><td>2</td><td>2</td>
-      </tr>
-      <tr>
-       <td>c</td> <td >3</td><td>ccc</td>
-      </tr>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td rowspan="2" colspan="2">a</td>
+          <td>aaa</td>
+          <td rowspan="2" colspan="2">2</td>
+          <td>2</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>b</td>
+          <td>bbb</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>c</td>
+          <td>3</td>
+          <td>ccc</td>
+        </tr>
+      </tbody>
     </table>
-    <el-button type="primary"  @click="build2">导出table多sheet页合并</el-button>
-    <el-button type="primary"  @click="build3">直接导出tableDom</el-button>
-    <el-button type="primary"  @click="excelBuild">exceljs数据导出测试</el-button>
-    <el-button type="primary"  @click="jsonExcelBuild">json数据导出excel</el-button>
+    <el-button type="primary" @click="build2">导出table多sheet页合并</el-button>
+    <el-button type="primary" @click="build3">直接导出tableDom</el-button>
+    <el-button type="primary" @click="excelBuild"
+      >exceljs数据导出测试</el-button
+    >
+    <el-button type="primary" @click="jsonExcelBuild"
+      >json数据导出excel</el-button
+    >
 
-    <TableCount/>
+    <TableCount />
   </div>
 </template>
 
 <style scoped lang="scss">
-
-#textTable{
+#textTable {
   td {
     border: 1px solid rgb(207, 146, 23);
   }
 }
-
 </style>

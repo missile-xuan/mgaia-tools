@@ -89,6 +89,14 @@ const router = createRouter({
           }
         },
         {
+          path: '/buildEchartPdf',
+          name: 'BuildEchartPdf',
+          component: () => import('@/views/buildEchartPdf/BuildEchartPdf.vue'),
+          meta: {
+            title: 'echart导出PDF'
+          }
+        },
+        {
           path: '/test',
           name: 'Test',
           component: () => import('@/views/test/Test.vue'),

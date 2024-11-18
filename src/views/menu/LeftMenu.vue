@@ -34,6 +34,10 @@ const menuGroupList = [
       {
         menuName: 'OCR文字识别',
         path: '/textOcr'
+      },
+      {
+        menuName: 'echart导出pdf',
+        path: '/buildEchartPdf'
       }
     ]
   },

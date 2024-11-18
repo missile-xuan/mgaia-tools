@@ -12,9 +12,11 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
+    "echarts": "^5.5.1",
     "element-plus": "^2.3.3",
     "exceljs": "^4.3.0",
     "file-saver": "^2.0.5",
+    "jspdf": "^2.5.2",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
     "pdf-lib": "^1.17.1",
