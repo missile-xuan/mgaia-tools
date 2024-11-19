@@ -2414,10 +2414,10 @@ const res: EchartData[] = [
 function buildEchartPdf (buildData: EchartData[]) {
   const A4_WIDTH = 595.28 // A4纸宽度
   const A4_HEIGHT = 841.89 // A4纸高度
-  const echartWidth = A4_WIDTH - 40 // echart宽度
-  const echartHeight = echartWidth * 0.6 // echart高度
   const pageMargin = 40 // 页边距
   const lineHeight = 20 // 行高
+  const echartWidth = (A4_WIDTH - pageMargin * 2) / 2 - lineHeight // echart宽度
+  const echartHeight = echartWidth * 0.9 // echart高度
 
   const canvas = document.createElement('canvas')
   canvas.width = echartWidth
@@ -2430,9 +2430,13 @@ function buildEchartPdf (buildData: EchartData[]) {
   pdf.setFont('SourceHanSans-Normal')
   const chartOptions = {
     title: {
-      text: 'Echart导出pdf'
+      text: 'Echart导出pdf',
+      textStyle: {
+        fontSize: 12
+      }
     },
     grid: {
+      top: 30,
       left: 50
     },
     animation: false,
@@ -2467,8 +2471,8 @@ function buildEchartPdf (buildData: EchartData[]) {
       currentY += lineHeight
       pdf.setFontSize(15)
       pdf.text(group.title, A4_WIDTH / 2, currentY, { align: 'center' })
-
-      for (const item of group.list) {
+      for (let i = 0; i < group.list.length; i++) {
+        const item = group.list[i]
         chartOptions.title.text = `${item.name}: ${item.value} ${item.index_unit ? item.index_unit : ''}   ${item.limit_level ? ('等级:' + item.limit_level) : ''}`
         chartOptions.xAxis.data = item.list.map(i => i.d_date)
         chartOptions.series[0].data = item.list.map(i => i.value)
@@ -2483,7 +2487,14 @@ function buildEchartPdf (buildData: EchartData[]) {
           pdf.addPage()
           currentY = pageMargin
         }
-        pdf.addImage(image, 'PNG', pageMargin, currentY + lineHeight, echartWidth, echartHeight)
+        const x = i % 2 === 0 ? pageMargin : (pageMargin + echartWidth + lineHeight)
+        pdf.addImage(image, 'PNG', x, currentY + lineHeight, echartWidth, echartHeight)
+        if (i % 2 === 1) {
+          currentY += echartHeight
+          // currentY += lineHeight
+        }
+      }
+      if (group.list.length % 2 === 1) {
         currentY += echartHeight
         currentY += lineHeight
       }
