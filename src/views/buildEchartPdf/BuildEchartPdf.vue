@@ -4,6 +4,8 @@ import { jsPDF } from 'jspdf'
 import * as echarts from 'echarts'
 import SourceHanSansNormal from './source-han-sans-normal'
 // echart导出pdf
+
+// 数据结构
 interface EchartData {
   title: string // 外层标题
   list: {
@@ -8483,6 +8485,7 @@ function buildEchartPdf (buildData: EchartData[]) {
   const A4_HEIGHT = 841.89 // A4纸高度
   const pageMargin = 40 // 页边距
   const lineHeight = 20 // 行高
+  // echart图片宽度 = (A4宽度 - 页边距 * 2) / 2 - 行高
   const echartWidth = (A4_WIDTH - pageMargin * 2) / 2 - lineHeight // echart宽度
   const echartHeight = echartWidth * 0.9 // echart高度
 
@@ -8543,6 +8546,7 @@ function buildEchartPdf (buildData: EchartData[]) {
         chartOptions.title.text = `${item.name}: ${item.value} ${item.index_unit ? item.index_unit : ''}   ${item.limit_level ? ('等级:' + item.limit_level) : ''}`
         chartOptions.xAxis.data = item.list.map(i => i.d_date)
         chartOptions.series[0].data = item.list.map(i => i.value)
+        // 数值差距过大 需要动态计算y轴宽度
         chartOptions.grid.left = Math.max(...chartOptions.series[0].data).toFixed(0).toString().length * 10
         echartObj.setOption(chartOptions)
         const image = echartObj.getDataURL({
