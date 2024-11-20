@@ -116,6 +116,7 @@ const result = ref('')
 const runQR = () => {
   const decoder = new QrcodeDecoder()
   decoder.decodeFromImage(nowQRBase64.value).then((res) => {
+    // @ts-ignore
     result.value = res.data
   })
 }
