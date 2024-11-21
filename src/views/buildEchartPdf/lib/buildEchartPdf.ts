@@ -32,11 +32,8 @@ export function buildEchartPdf (buildData: EchartData[]) {
   // const canvas = document.createElement('canvas')
   // canvas.width = echartWidth
   // canvas.height = echartHeight
-  // @ts-ignore
   const canvas = new OffscreenCanvas(echartWidth, echartHeight)
-  // @ts-ignore
   const echartObj = echarts.init(canvas as unknown as HTMLCanvasElement)
-  // eslint-disable-next-line new-cap
   const pdf = new jsPDF('p', 'pt', 'a4')
   pdf.addFileToVFS('SourceHanSans', SourceHanSansNormal())
   pdf.addFont('SourceHanSans', 'SourceHanSans-Normal', 'normal')

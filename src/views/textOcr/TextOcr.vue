@@ -30,10 +30,8 @@ const scheduler = Tesseract.createScheduler()
 const initOcr = async () => {
   const worker1 = await Tesseract.createWorker()
   const worker2 = await Tesseract.createWorker()
-  await worker1.loadLanguage('chi_sim')
-  await worker2.loadLanguage('chi_sim')
-  await worker1.initialize('chi_sim')
-  await worker2.initialize('chi_sim') // eng+chi_tra
+  await worker1.reinitialize('chi_sim')
+  await worker2.reinitialize('chi_sim')
   scheduler.addWorker(worker1)
   scheduler.addWorker(worker2)
 }

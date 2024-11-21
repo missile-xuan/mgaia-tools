@@ -3,9 +3,7 @@
  */
 import { buildEchartPdf } from './buildEchartPdf'
 
-onmessage = e => {
-  debugger
-  var global = self
+onmessage = (e) => {
   buildEchartPdf(e.data)
   postMessage('done')
 }

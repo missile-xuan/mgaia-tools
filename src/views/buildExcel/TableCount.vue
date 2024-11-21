@@ -46,7 +46,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import type { TableColumnCtx } from 'element-plus'
-import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, downloadExcel } from './buildExcel'
+import { sheetDataListToExcel, mergeDownSheetData, tableDomToSheetData, downloadExcel } from './lib/buildExcel'
 
 const tabe1Div = ref()
 const build1 = () => {
@@ -88,7 +88,7 @@ const getSummaries = (param: SummaryMethodProps) => {
       sums[index] = 'Total Cost'
       return
     }
-    // @ts-ignore
+    // @ts-expect-error ...
     const values = data.map(item => Number(item[column.property]))
     if (!values.every(value => Number.isNaN(value))) {
       sums[index] = `$ ${values.reduce((prev, curr) => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { buildEchartPdf, type EchartData } from './buildEchartPdf'
+import { buildEchartPdf, type EchartData } from './lib/buildEchartPdf'
 import BuildWorker from './buildWorker.ts?worker'
 // echart导出pdf
 

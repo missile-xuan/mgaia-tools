@@ -2,8 +2,8 @@
 // 为什么要用此二次封装 https://github.com/protobi/js-xlsx/issues/163
 // import lodash from 'lodash'
 import { computed, nextTick, ref, watch } from 'vue'
-import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel } from './buildExcel'
-import type { TableCellData, CellStyle } from './buildExcel'
+import { downloadExcel, rgbaToArgbHEX, argbHEXToRgba, sheetDataListToExcel, type TableCellData, type CellStyle } from './lib/buildExcel'
+
 
 // ========配置面板========
 // 表格公共配置

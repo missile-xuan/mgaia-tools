@@ -2,7 +2,7 @@
 import { UploadFilled } from '@element-plus/icons-vue'
 import type { UploadUserFile, UploadFile, UploadFiles } from 'element-plus'
 import * as pdfjsLib from 'pdfjs-dist' // 需要通过as引入 （坑死）
-import workerSrc from 'pdfjs-dist/build/pdf.worker.js?url'
+import workerSrc from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import { ref } from 'vue'
 import { PDFDocument } from 'pdf-lib'
 // pdf转html

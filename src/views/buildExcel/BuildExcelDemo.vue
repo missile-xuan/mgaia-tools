@@ -12,7 +12,7 @@ import {
   tableDomToSheetData,
   tableDomToExcel,
   downloadExcel
-} from './buildExcel'
+} from './lib/buildExcel'
 // 构建excel
 const testTableData = [
   { id: 1, name: 'a', data: 'aa' },

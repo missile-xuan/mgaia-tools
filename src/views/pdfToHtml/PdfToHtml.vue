@@ -3,7 +3,7 @@ import { UploadFilled } from '@element-plus/icons-vue'
 import type { UploadUserFile, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import * as pdfjsLib from 'pdfjs-dist' // 需要通过as引入 （坑死）
-import workerSrc from 'pdfjs-dist/build/pdf.worker.js?url'
+import workerSrc from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import lodash from 'lodash'
 import JSZip from 'JSZip'
 import { saveAs } from 'file-saver'
