@@ -1,7 +1,5 @@
-import { jsPDF } from 'jspdf'
 import * as echarts from 'echarts'
-import SourceHanSansNormal from './source-han-sans-normal'
-
+import PdfWorker from './pdfWorker.ts?worker'
 // 数据结构
 export interface EchartData {
   title: string // 外层标题
@@ -20,7 +18,15 @@ export interface EchartData {
   }[]
 }
 
-export function buildEchartPdf (buildData: EchartData[]) {
+export function buildEchartPdfWorker (buildData: EchartData[]) {
+  const time = new Date().getTime()
+  const worker = new PdfWorker()
+  worker.onmessage = e => {
+    blobToFile(e.data, 'worker导出.pdf')
+    worker.terminate() // 终止操作
+    console.log('worker线程导出', new Date().getTime() - time)
+
+  }
   const A4_WIDTH = 595.28 // A4纸宽度 （jspdf的定义）
   const A4_HEIGHT = 841.89 // A4纸高度
   const pageMargin = 40 // 页边距
@@ -34,10 +40,7 @@ export function buildEchartPdf (buildData: EchartData[]) {
   // canvas.height = echartHeight
   const canvas = new OffscreenCanvas(echartWidth, echartHeight)
   const echartObj = echarts.init(canvas as unknown as HTMLCanvasElement)
-  const pdf = new jsPDF('p', 'pt', 'a4')
-  pdf.addFileToVFS('SourceHanSans', SourceHanSansNormal())
-  pdf.addFont('SourceHanSans', 'SourceHanSans-Normal', 'normal')
-  pdf.setFont('SourceHanSans-Normal')
+
   const chartOptions = {
     title: {
       text: 'Echart导出pdf',
@@ -68,19 +71,17 @@ export function buildEchartPdf (buildData: EchartData[]) {
   let currentY = pageMargin
   for (const category of buildData) {
     if (currentY > A4_HEIGHT - echartHeight - pageMargin - lineHeight * 2) {
-      pdf.addPage()
+      worker.postMessage({ type: 'addPage' })
       currentY = pageMargin
     }
     // 写入标题
     currentY += lineHeight
-    pdf.setFontSize(20)
-    pdf.text(category.title, pageMargin, currentY)
+    worker.postMessage({ type: 'text', fontSize: 20, text: category.title, x: pageMargin, y: currentY, align: 'left' })
 
     for (const group of category.list) {
       // 写入分组标题
       currentY += lineHeight
-      pdf.setFontSize(15)
-      pdf.text(group.title, A4_WIDTH / 2, currentY, { align: 'center' })
+      worker.postMessage({ type: 'text', fontSize: 15, text: group.title, x: A4_WIDTH / 2, y: currentY, align: 'center' })
       for (let i = 0; i < group.list.length; i++) {
         const item = group.list[i]
         chartOptions.title.text = `${item.name}: ${item.value} ${item.index_unit ? item.index_unit : ''}   ${item.limit_level ? ('等级:' + item.limit_level) : ''}`
@@ -95,11 +96,11 @@ export function buildEchartPdf (buildData: EchartData[]) {
           backgroundColor: '#fff'
         })
         if (currentY + lineHeight + echartHeight > A4_HEIGHT - pageMargin) {
-          pdf.addPage()
+          worker.postMessage({ type: 'addPage' })
           currentY = pageMargin
         }
         const x = i % 2 === 0 ? pageMargin : (pageMargin + echartWidth + lineHeight)
-        pdf.addImage(image, 'PNG', x, currentY + lineHeight, echartWidth, echartHeight)
+        worker.postMessage({ type: 'addImage', image, format: 'PNG', x, y: currentY + lineHeight, width: echartWidth, height: echartHeight })
         if (i % 2 === 1) {
           currentY += echartHeight
           // currentY += lineHeight
@@ -111,5 +112,15 @@ export function buildEchartPdf (buildData: EchartData[]) {
       }
     }
   }
-  pdf.save('echart.pdf')
+  worker.postMessage({ type: 'getBlog' })
+}
+
+function blobToFile (blob: Blob, fileName: string) {
+  const a = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+  a.remove()
 }

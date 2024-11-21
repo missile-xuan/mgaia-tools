@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { buildEchartPdf, type EchartData } from './lib/buildEchartPdf'
-import BuildWorker from './lib/buildWorker.ts?worker'
+import { buildEchartPdfWorker } from './lib/buildEchartPdfWorker'
 // echart导出pdf
 
 const res: EchartData[] = [
@@ -5531,24 +5531,19 @@ const res: EchartData[] = [
   }
 ]
 
-const imgUrl = ref('')
+const runType = ref(false)
 function build () {
+  runType.value = true
   const time = new Date().getTime()
   buildEchartPdf(res)
   console.log('ui线程导出', new Date().getTime() - time)
+  // runType.value = false
 }
-const worker = new BuildWorker()
 function buildWorker () {
-  const time = new Date().getTime()
-  worker.postMessage(res)
-  worker.onmessage = e => {
-    if (e.data === 'done') {
-      worker.terminate() // 终止操作
-      console.log('worker线程导出', new Date().getTime() - time)
-    }
-  }
-  console.log('worker线程导出', new Date().getTime() - time)
+  runType.value = true
+  buildEchartPdfWorker(res)
 }
+
 </script>
 
 <template>
@@ -5556,7 +5551,7 @@ function buildWorker () {
     echart导出pdf
     <el-button type="primary" @click="build">ui线程导出</el-button>
     <el-button type="primary" @click="buildWorker">worker线程导出</el-button>
-    <img :src="imgUrl" />
+    <img v-show="runType" src="@/assets/loading/loading.gif" />
   </div>
 </template>
 
