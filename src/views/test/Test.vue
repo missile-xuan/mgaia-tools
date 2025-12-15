@@ -1,20 +1,31 @@
 <script setup lang="ts">
 import { ref, reactive, onUnmounted } from 'vue'
-let data = reactive<number[]>([1]) // 字典项
-data = [1233]
+import AudioCapture from './AudioCapture'
 
-function addNumber () {
-  data[0]++
+let audioCapture: AudioCapture | undefined = undefined
+
+const speaking = ref(false)
+async function speak() {
+
+  audioCapture = new AudioCapture((data: Blob) => {
+    console.log('send', data)
+  })
+  audioCapture.start()
+}
+
+function stop() {
+  speaking.value = false
+  if (!audioCapture) return
+  audioCapture.stop()
+  console.log('结束说话')
 }
 </script>
 
 <template>
   <div class="global-c-main-content">
-    测试页面
-    {{ data }}
-    <el-button type="primary"  @click="addNumber">+</el-button>
+    语音识别
+    <el-button type="primary" @mousedown="speak" @mouseup="stop">说话</el-button>
   </div>
 </template>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

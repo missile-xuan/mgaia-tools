@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
+    "@types/audioworklet": "^0.0.92",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.9.0",
     "@vitejs/plugin-vue": "^5.1.4",
