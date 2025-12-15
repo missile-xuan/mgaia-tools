@@ -97,6 +97,14 @@ const router = createRouter({
           }
         },
         {
+          path: '/speechToText',
+          name: 'SpeechToText',
+          component: () => import('@/views/speechToText/SpeechToText.vue'),
+          meta: {
+            title: '语音识别'
+          }
+        },
+        {
           path: '/test',
           name: 'Test',
           component: () => import('@/views/test/Test.vue'),

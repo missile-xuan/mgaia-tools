@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { buildEchartPdf, type EchartData } from './lib/buildEchartPdf'
 import { buildEchartPdfWorker } from './lib/buildEchartPdfWorker'
+import { buildEchartPdfTest } from './lib/test'
+
+import TestWorker from './lib/testWorker?worker'
 // echart导出pdf
 
 const res: EchartData[] = [
@@ -5543,7 +5546,30 @@ function buildWorker () {
   runType.value = true
   buildEchartPdfWorker(res)
 }
+const worker = new TestWorker()
+function test(){
+  const time = new Date().getTime()
+  worker.postMessage(res)
+  worker.onmessage = e => {
+    blobToFile(e.data, 'worker导出.pdf')
+    worker.terminate() // 终止操作
+    console.log('worker线程导出', new Date().getTime() - time)
 
+  }
+}
+function blobToFile (blob: Blob, fileName: string) {
+  const a = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+  a.remove()
+}
+
+function t(){
+  buildEchartPdfTest(res)
+}
 </script>
 
 <template>
@@ -5551,6 +5577,9 @@ function buildWorker () {
     echart导出pdf
     <el-button type="primary" @click="build">ui线程导出</el-button>
     <el-button type="primary" @click="buildWorker">worker线程导出</el-button>
+    <el-button type="primary" @click="test">测试导出</el-button>
+    <el-button type="primary" @click="t">测试svg在UI线程中的渲染</el-button>
+
     <img v-show="runType" src="@/assets/loading/loading.gif" />
   </div>
 </template>

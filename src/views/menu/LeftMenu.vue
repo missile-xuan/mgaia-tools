@@ -64,6 +64,10 @@ const menuGroupList = [
       {
         menuName: '屏幕录制',
         path: '/screenRecording'
+      },
+      {
+        menuName: '语音识别',
+        path: '/speechToText'
       }
     ]
   }
