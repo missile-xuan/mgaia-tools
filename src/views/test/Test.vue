@@ -6,7 +6,6 @@ let audioCapture: AudioCapture | undefined = undefined
 
 const speaking = ref(false)
 async function speak() {
-
   audioCapture = new AudioCapture((data: Blob) => {
     console.log('send', data)
   })
@@ -17,12 +16,13 @@ function stop() {
   speaking.value = false
   if (!audioCapture) return
   const blob = audioCapture.stop()
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'recording.wav';
+  const url = URL.createObjectURL(blob)
+  debugger
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'recording.wav'
   console.log('结束说话')
+  a.click()
 }
 </script>
 
