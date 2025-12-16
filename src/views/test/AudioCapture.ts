@@ -5,6 +5,7 @@ export default class AudioCapture {
   private processor?: AudioWorkletNode
   private mediaStream?: MediaStream
   private sendFun?: (data: Blob) => void
+  private pcmChunks: Int16Array[] = []
   private wavBuffer?: Uint8Array<ArrayBuffer>
   constructor(sendFun: (data: Blob) => void) {
     this.sendFun = sendFun
@@ -12,6 +13,7 @@ export default class AudioCapture {
   async start() {
     console.log('开始监听音频')
     this.wavBuffer = new Uint8Array(0)
+    this.pcmChunks = []
 
     // 采样率锁定 16000
     this.audioCtx = new AudioContext({ sampleRate: 16000 })
@@ -19,28 +21,9 @@ export default class AudioCapture {
     this.processor = new AudioWorkletNode(this.audioCtx, 'pcm-capture')
 
     this.processor.port.onmessage = (e) => {
-      console.log(e.data)
-      const pcm16 =  new Int16Array(e.data) // Int16Array
-      const header = this.#generateWavHeader({
-        sampleRate: 16000,
-        numChannels: 1,
-        bitsPerSample: 16,
-        dataSize: pcm16.length * 2 // 字节数
-      });
-
-      console.log('onmessage', new Blob([header, pcm16]))
-      this.sendFun!(new Blob([header, pcm16]))
-
-      const int16Buffer = new Int16Array(pcm16.length)
-      for (let i = 0; i < pcm16.length; i++) {
-        int16Buffer[i] = Math.max(-32768, Math.min(32767, pcm16[i]))
+      if (e.data.type === 'pcm-data') {
+        this.pcmChunks.push(e.data.buffer);
       }
-
-      // 合并到总缓冲区
-      const newBuffer = new Uint8Array(this.wavBuffer!.byteLength + int16Buffer.byteLength)
-      newBuffer.set(new Uint8Array(this.wavBuffer!))
-      newBuffer.set(new Uint8Array(int16Buffer.buffer), this.wavBuffer!.byteLength)
-      this.wavBuffer = newBuffer
     }
 
     // 1. 获取麦克风
@@ -72,10 +55,30 @@ export default class AudioCapture {
 
     console.log('音频监听已停止')
 
-    const blob = new Blob([this.wavBuffer!], { type: 'audio/wav' })
+    const blob = this.#generateWav()
     return blob
   }
 
+  #generateWav(): Blob{
+    const dataSize = this.pcmChunks.reduce((acc, cur) => acc + cur.byteLength, 0)
+    const header = this.#generateWavHeader({
+      sampleRate: 16000,
+      numChannels: 1,
+      bitsPerSample: 16,
+      dataSize
+    })
+    // 合并 PCM 数据
+    const pcmBuffer = new Uint8Array(header.byteLength + dataSize);
+    pcmBuffer.set(new Uint8Array(header));
+    let offset = header.byteLength;
+
+    this.pcmChunks.forEach(chunk => {
+      pcmBuffer.set(new Uint8Array(chunk.buffer), offset);
+      offset += chunk.byteLength;
+    });
+
+    return new Blob([pcmBuffer], { type: 'audio/wav' });
+  }
   /**
    * 生成wav文件头
    * @param sampleRate 采样率
