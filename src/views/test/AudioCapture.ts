@@ -5,11 +5,14 @@ export default class AudioCapture {
   private processor?: AudioWorkletNode
   private mediaStream?: MediaStream
   private sendFun?: (data: Blob) => void
+  private wavBuffer?: Uint8Array<ArrayBuffer>
   constructor(sendFun: (data: Blob) => void) {
     this.sendFun = sendFun
   }
   async start() {
     console.log('开始监听音频')
+    this.wavBuffer = new ArrayBuffer(0)
+
     // 采样率锁定 16000
     this.audioCtx = new AudioContext({ sampleRate: 16000 })
     await this.audioCtx.audioWorklet.addModule(WorkletProcessor)
@@ -23,6 +26,19 @@ export default class AudioCapture {
       // ws.send(new Blob([header, pcm16]));
       console.log('onmessage', new Blob([header, pcm16]))
       this.sendFun!(new Blob([header, pcm16]))
+
+      const int16Buffer = new Int16Array(pcm16.length);
+      for (let i = 0; i < pcm16.length; i++) {
+        int16Buffer[i] = Math.max(-32768, Math.min(32767, pcm16[i]));
+      }
+
+      // 合并到总缓冲区
+      const newBuffer = new Uint8Array(
+        this.wavBuffer!.byteLength + int16Buffer.byteLength
+      );
+      newBuffer.set(new Uint8Array(this.wavBuffer!));
+      newBuffer.set(new Uint8Array(int16Buffer.buffer), this.wavBuffer!.byteLength);
+      this.wavBuffer = newBuffer;
     }
 
     // 1. 获取麦克风
@@ -34,6 +50,8 @@ export default class AudioCapture {
     // 本地监听（可选）
     this.processor.connect(this.audioCtx.destination)
   }
+
+  // 停止监听 返回整体wav blob
   stop() {
     // ① 停麦克风轨道（释放硬件）
     this.mediaStream?.getTracks().forEach((t) => t.stop())
@@ -51,6 +69,8 @@ export default class AudioCapture {
     this.sendFun = undefined
 
     console.log('音频监听已停止')
-    return true
+
+    const blob = new Blob([this.wavBuffer!], { type: 'audio/wav' });
+    return blob
   }
 }

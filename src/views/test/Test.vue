@@ -16,7 +16,12 @@ async function speak() {
 function stop() {
   speaking.value = false
   if (!audioCapture) return
-  audioCapture.stop()
+  const blob = audioCapture.stop()
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'recording.wav';
   console.log('结束说话')
 }
 </script>
