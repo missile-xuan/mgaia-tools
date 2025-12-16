@@ -12,7 +12,9 @@ registerProcessor('pcm-capture', class extends AudioWorkletProcessor {
     super();
     this.params = {
       sampleRate: 16000, // 采样率
-      bufferSize: 480 // 缓冲区大小 480 帧缓冲（约 30ms @16kHz）平衡延迟与性能
+      // 缓冲区大小 (Bytes)=采样率 (Hz)×时间 (s)×位深 (bits)×声道数/8
+      // Int16Array = Uint8Array/2
+      bufferSize: 16000 * 0.2 * 16 * 1 / 8 / 2  // 缓冲区大小 480 帧缓冲（约 30ms @16kHz）平衡延迟与性能
     };
   }
 
