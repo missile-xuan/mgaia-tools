@@ -60,7 +60,7 @@ export default class AudioCapture {
   }
   #generateWav(): Blob{
     // 计算数据大小
-    // const dataSize = this.pcmChunks.reduce((acc, cur) => acc + cur.byteLength, 0)
+    const dataSize = this.pcmChunks.reduce((acc, cur) => acc + cur.byteLength, 0)
     const header = this.#generateWavHeader({
       sampleRate: 16000,
       numChannels: 1,
@@ -68,7 +68,7 @@ export default class AudioCapture {
       dataSize: 0
     })
     // 合并 PCM 数据
-    const pcmBuffer = new Uint8Array();
+    const pcmBuffer = new Uint8Array(header.byteLength + dataSize);
     pcmBuffer.set(new Uint8Array(header));
     let offset = header.byteLength;
 
