@@ -11,7 +11,7 @@ export default class AudioCapture {
   }
   async start() {
     console.log('开始监听音频')
-    this.wavBuffer = new ArrayBuffer(0)
+    this.wavBuffer = new Uint8Array(0)
 
     // 采样率锁定 16000
     this.audioCtx = new AudioContext({ sampleRate: 16000 })
@@ -20,25 +20,27 @@ export default class AudioCapture {
 
     this.processor.port.onmessage = (e) => {
       console.log(e.data)
-      const pcm16 = e.data // Int16Array
-      const header = new ArrayBuffer(4)
-      new DataView(header).setUint32(0, pcm16.length, false)
-      // ws.send(new Blob([header, pcm16]));
+      const pcm16 =  new Int16Array(e.data) // Int16Array
+      const header = this.#generateWavHeader({
+        sampleRate: 16000,
+        numChannels: 1,
+        bitsPerSample: 16,
+        dataSize: pcm16.length * 2 // 字节数
+      });
+
       console.log('onmessage', new Blob([header, pcm16]))
       this.sendFun!(new Blob([header, pcm16]))
 
-      const int16Buffer = new Int16Array(pcm16.length);
+      const int16Buffer = new Int16Array(pcm16.length)
       for (let i = 0; i < pcm16.length; i++) {
-        int16Buffer[i] = Math.max(-32768, Math.min(32767, pcm16[i]));
+        int16Buffer[i] = Math.max(-32768, Math.min(32767, pcm16[i]))
       }
 
       // 合并到总缓冲区
-      const newBuffer = new Uint8Array(
-        this.wavBuffer!.byteLength + int16Buffer.byteLength
-      );
-      newBuffer.set(new Uint8Array(this.wavBuffer!));
-      newBuffer.set(new Uint8Array(int16Buffer.buffer), this.wavBuffer!.byteLength);
-      this.wavBuffer = newBuffer;
+      const newBuffer = new Uint8Array(this.wavBuffer!.byteLength + int16Buffer.byteLength)
+      newBuffer.set(new Uint8Array(this.wavBuffer!))
+      newBuffer.set(new Uint8Array(int16Buffer.buffer), this.wavBuffer!.byteLength)
+      this.wavBuffer = newBuffer
     }
 
     // 1. 获取麦克风
@@ -70,7 +72,53 @@ export default class AudioCapture {
 
     console.log('音频监听已停止')
 
-    const blob = new Blob([this.wavBuffer!], { type: 'audio/wav' });
+    const blob = new Blob([this.wavBuffer!], { type: 'audio/wav' })
     return blob
+  }
+
+  /**
+   * 生成wav文件头
+   * @param sampleRate 采样率
+   * @param numChannels 声道数
+   * @param bitsPerSample 位数
+   * @param dataSize 数据大小
+   * @returns wav文件头
+   */
+  #generateWavHeader(params:{sampleRate:number, numChannels:number, bitsPerSample:number, dataSize:number}) {
+    const { sampleRate, numChannels, bitsPerSample, dataSize } = params
+    const header = new ArrayBuffer(44) // 标准 44 字节头
+    const view = new DataView(header)
+
+    // RIFF 块
+    this.#writeString(view, 0, 'RIFF')
+    view.setUint32(4, 36 + dataSize, true) // 文件总大小 - 8
+    this.#writeString(view, 8, 'WAVE')
+
+    // fmt 块
+    this.#writeString(view, 12, 'fmt ')
+    view.setUint32(16, 16, true) // fmt 块长度
+    view.setUint16(20, 1, true) // PCM 编码
+    view.setUint16(22, numChannels, true)
+    view.setUint32(24, sampleRate, true)
+    view.setUint32(28, (sampleRate * numChannels * bitsPerSample) / 8, true)
+    view.setUint16(32, (numChannels * bitsPerSample) / 8, true)
+    view.setUint16(34, bitsPerSample, true)
+
+    // data 块
+    this.#writeString(view, 36, 'data')
+    view.setUint32(40, dataSize, true)
+
+    return header
+  }
+  /**
+   * 写入字符串
+   * @param view
+   * @param offset
+   * @param str
+   */
+  #writeString(view:DataView<ArrayBuffer> , offset: number, str:string) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i))
+    }
   }
 }
