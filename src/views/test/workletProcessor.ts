@@ -38,6 +38,13 @@ registerProcessor('pcm-capture', class extends AudioWorkletProcessor {
     return true;
   }
 
+  onMessage(e: MessageEvent){
+    if (e.data.command === 'flush') {
+      // 清理缓冲区
+      this.pcmBuffer = new Int16Array(0)
+    }
+  }
+
   /**
    * 将输入的 Float32Array 转换为 Int16Array
    * @param input 输入的 Float32Array

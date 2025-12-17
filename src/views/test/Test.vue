@@ -2,6 +2,8 @@
 import { ref, reactive, onUnmounted } from 'vue'
 import AudioCapture from './AudioCapture'
 
+import { io, Socket } from 'socket.io-client'
+
 let audioCapture: AudioCapture | undefined = undefined
 
 const speaking = ref(false)
@@ -24,6 +26,24 @@ function stop() {
   console.log('结束说话')
   a.click()
 }
+
+// 测试socket.io
+const socket = io('http://localhost:3000')
+socket.on('connect', function () {
+  console.log('Connected')
+
+  socket.emit('events', { test: 'test' })
+  socket.emit('identity', 0, response => console.log('Identity:', response))
+})
+socket.on('events', function (data) {
+  console.log('event', data)
+})
+socket.on('exception', function (data) {
+  console.log('event', data)
+})
+socket.on('disconnect', function () {
+  console.log('Disconnected')
+})
 </script>
 
 <template>

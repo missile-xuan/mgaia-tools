@@ -7,37 +7,70 @@ export default class AudioCapture {
   private sendFun?: (data: Blob) => void
   private pcmChunks: Int16Array[] = []
   private wavBuffer?: Uint8Array<ArrayBuffer>
+  private isRecording: boolean = false
   constructor(sendFun: (data: Blob) => void) {
     this.sendFun = sendFun
-  }
-  async start() {
-    console.log('开始监听音频')
-    this.wavBuffer = new Uint8Array(0)
-    this.pcmChunks = []
-
+    // 在做任何其他操作之前，你需要创建一个AudioContext对象，因为所有事情都是在上下文中发生的。建议创建一个AudioContext对象并复用它，而不是每次初始化一个新的AudioContext对象，并且可以对多个不同的音频源和管道同时使用一个AudioContext对象。
     // 采样率锁定 16000
     this.audioCtx = new AudioContext({ sampleRate: 16000 })
-    await this.audioCtx.audioWorklet.addModule(WorkletProcessor)
     this.processor = new AudioWorkletNode(this.audioCtx, 'pcm-capture')
+    this.initStream()
+  }
 
-    this.processor.port.onmessage = (e) => {
-      if (e.data.type === 'pcm-data') {
-        this.pcmChunks.push(e.data.buffer);
-      }
-    }
-
+  /**
+   * 初始化音频源
+   */
+  async initStream() {
     // 1. 获取麦克风
     this.mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: true
     })
-    this.source = this.audioCtx.createMediaStreamSource(this.mediaStream)
-    this.source.connect(this.processor)
+    this.source = this.audioCtx!.createMediaStreamSource(this.mediaStream)
+    this.source.connect(this.processor!)
     // 本地监听（可选）
-    this.processor.connect(this.audioCtx.destination)
+    this.processor!.connect(this.audioCtx!.destination)
+    // 添加音频处理方法
+    await this.audioCtx!.audioWorklet.addModule(WorkletProcessor)
+  }
+
+  async start() {
+    if (this.isRecording) return;
+     // 恢复音频上下文
+    await this.audioCtx!.resume();
+    this.source!.connect(this.processor!);
+    this.processor!.connect(this.audioCtx!.destination);
+    this.isRecording = true;
+
+    console.log('开始监听音频')
+    this.wavBuffer = new Uint8Array(0)
+    this.pcmChunks = []
+    this.processor!.port.onmessage = (e) => {
+      if (e.data.type === 'pcm-data') {
+        this.pcmChunks.push(e.data.buffer);
+      }
+    }
   }
 
   // 停止监听 返回整体wav blob
   stop() {
+    if (!this.isRecording || !this.source) return;
+
+    // 断开音频链路（保留节点）
+    this.source.disconnect(this.processor!);
+    this.processor!.disconnect(this.audioCtx!.destination);
+
+    // 暂停音频上下文（避免后台耗电）
+    this.audioCtx!.suspend().catch(console.error);
+
+    // 清空缓冲区
+    this.processor!.port.postMessage({ command: 'flush' });
+    this.isRecording = false;
+
+
+    const blob = this.#generateWav()
+    return blob
+  }
+  destroy() {
     // ① 停麦克风轨道（释放硬件）
     this.mediaStream?.getTracks().forEach((t) => t.stop())
     this.mediaStream = undefined
@@ -54,9 +87,6 @@ export default class AudioCapture {
     this.sendFun = undefined
 
     console.log('音频监听已停止')
-
-    const blob = this.#generateWav()
-    return blob
   }
 
   #generateWav(): Blob{
