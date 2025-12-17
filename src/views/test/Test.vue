@@ -30,7 +30,7 @@ function destroy(){
 }
 
 // 测试socket.io
-const socket = io('http://localhost:3000')
+const socket = io('http://172.30.12.13:3000/speechrecognition')
 socket.on('connect', function () {
   console.log('Connected')
 
