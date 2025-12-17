@@ -3,6 +3,10 @@ import { ref, reactive, onUnmounted } from 'vue'
 import AudioCapture from './AudioCapture'
 
 import { io, Socket } from 'socket.io-client'
+// 解码为字符串
+const decoder = new TextDecoder('utf-8');
+// 测试socket.io
+const socket = io('http://172.30.12.13:3000/speechrecognition')
 
 const audioCapture = new AudioCapture((data: Blob) => {
     console.log('send', data)
@@ -10,8 +14,22 @@ const audioCapture = new AudioCapture((data: Blob) => {
 
 const speaking = ref(false)
 async function speak() {
-  audioCapture.start()
+  socket.emit('open', {})
+  setTimeout(() => {
+    audioCapture.start()
+  }, 200)
+
 }
+
+socket.on('open', function (data) {
+  console.log('open', data)
+})
+socket.on('message', function (data) {
+
+  console.log('message', data)
+  const payloadStr = decoder.decode(data.payload)
+  console.log('payloadStr', payloadStr);
+})
 
 function stop() {
   speaking.value = false
@@ -29,23 +47,10 @@ function destroy(){
   audioCapture.destroy()
 }
 
-// 测试socket.io
-const socket = io('http://172.30.12.13:3000/speechrecognition')
-socket.on('connect', function () {
-  console.log('Connected')
 
-  socket.emit('events', { test: 'test' })
-  socket.emit('identity', 0, response => console.log('Identity:', response))
-})
-socket.on('events', function (data) {
-  console.log('event', data)
-})
-socket.on('exception', function (data) {
-  console.log('event', data)
-})
-socket.on('disconnect', function () {
-  console.log('Disconnected')
-})
+
+
+
 </script>
 
 <template>

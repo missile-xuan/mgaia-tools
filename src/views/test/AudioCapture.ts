@@ -92,6 +92,18 @@ export default class AudioCapture {
     console.log('音频监听已停止')
   }
 
+  getWavBufferHeader(): Uint8Array<ArrayBuffer> {
+    const header = this.#generateWavHeader({
+      sampleRate: 16000,
+      numChannels: 1,
+      bitsPerSample: 16,
+      dataSize: 0
+    })
+
+    const headerBuffer = new Uint8Array(header.byteLength)
+    headerBuffer.set(new Uint8Array(header))
+    return headerBuffer
+  }
   #generateWav(): Blob{
     // 计算数据大小
     const dataSize = this.pcmChunks.reduce((acc, cur) => acc + cur.byteLength, 0)
