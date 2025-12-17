@@ -10,10 +10,8 @@ export default class AudioCapture {
   private isRecording: boolean = false
   constructor(sendFun: (data: Blob) => void) {
     this.sendFun = sendFun
-    // 在做任何其他操作之前，你需要创建一个AudioContext对象，因为所有事情都是在上下文中发生的。建议创建一个AudioContext对象并复用它，而不是每次初始化一个新的AudioContext对象，并且可以对多个不同的音频源和管道同时使用一个AudioContext对象。
-    // 采样率锁定 16000
-    this.audioCtx = new AudioContext({ sampleRate: 16000 })
-    this.processor = new AudioWorkletNode(this.audioCtx, 'pcm-capture')
+
+
     this.initStream()
   }
 
@@ -21,6 +19,12 @@ export default class AudioCapture {
    * 初始化音频源
    */
   async initStream() {
+    // 在做任何其他操作之前，你需要创建一个AudioContext对象，因为所有事情都是在上下文中发生的。建议创建一个AudioContext对象并复用它，而不是每次初始化一个新的AudioContext对象，并且可以对多个不同的音频源和管道同时使用一个AudioContext对象。
+    // 采样率锁定 16000
+    this.audioCtx = new AudioContext({ sampleRate: 16000 })
+    // 添加音频处理方法
+    await this.audioCtx!.audioWorklet.addModule(WorkletProcessor)
+    this.processor = new AudioWorkletNode(this.audioCtx!, 'pcm-capture')
     // 1. 获取麦克风
     this.mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: true
@@ -29,8 +33,7 @@ export default class AudioCapture {
     this.source.connect(this.processor!)
     // 本地监听（可选）
     this.processor!.connect(this.audioCtx!.destination)
-    // 添加音频处理方法
-    await this.audioCtx!.audioWorklet.addModule(WorkletProcessor)
+
   }
 
   async start() {
@@ -53,7 +56,7 @@ export default class AudioCapture {
 
   // 停止监听 返回整体wav blob
   stop() {
-    if (!this.isRecording || !this.source) return;
+    if (!this.isRecording || !this.source) return new Blob();
 
     // 断开音频链路（保留节点）
     this.source.disconnect(this.processor!);

@@ -4,13 +4,12 @@ import AudioCapture from './AudioCapture'
 
 import { io, Socket } from 'socket.io-client'
 
-let audioCapture: AudioCapture | undefined = undefined
+const audioCapture = new AudioCapture((data: Blob) => {
+    console.log('send', data)
+  })
 
 const speaking = ref(false)
 async function speak() {
-  audioCapture = new AudioCapture((data: Blob) => {
-    console.log('send', data)
-  })
   audioCapture.start()
 }
 
@@ -19,12 +18,15 @@ function stop() {
   if (!audioCapture) return
   const blob = audioCapture.stop()
   const url = URL.createObjectURL(blob)
-  debugger
   const a = document.createElement('a')
   a.href = url
   a.download = 'recording.wav'
   console.log('结束说话')
   a.click()
+}
+
+function destroy(){
+  audioCapture.destroy()
 }
 
 // 测试socket.io
@@ -50,6 +52,8 @@ socket.on('disconnect', function () {
   <div class="global-c-main-content">
     语音识别
     <el-button type="primary" @mousedown="speak" @mouseup="stop">说话</el-button>
+    <el-button type="primary" @click="destroy">x销毁</el-button>
+
   </div>
 </template>
 
