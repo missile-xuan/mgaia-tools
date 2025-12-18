@@ -11,7 +11,6 @@ export default class AudioCapture {
   constructor(sendFun: (data: Uint8Array<ArrayBuffer>) => void) {
     this.sendFun = sendFun
 
-
     this.initStream()
   }
 
@@ -33,28 +32,27 @@ export default class AudioCapture {
     this.source.connect(this.processor!)
     // 本地监听（可选）
     this.processor!.connect(this.audioCtx!.destination)
-
   }
 
   async start() {
-    if (this.isRecording) return;
-     // 恢复音频上下文
-    await this.audioCtx!.resume();
-    this.source!.connect(this.processor!);
-    this.processor!.connect(this.audioCtx!.destination);
-    this.isRecording = true;
+    if (this.isRecording) return
+    // 恢复音频上下文
+    await this.audioCtx!.resume()
+    this.source!.connect(this.processor!)
+    this.processor!.connect(this.audioCtx!.destination)
+    this.isRecording = true
 
     console.log('开始监听音频')
     this.wavBuffer = new Uint8Array(0)
     this.pcmChunks = []
     this.processor!.port.onmessage = (e) => {
       if (e.data.type === 'pcm-data') {
-        this.pcmChunks.push(e.data.buffer);
+        this.pcmChunks.push(e.data.buffer)
 
         // 发送数据
         // 合并 PCM 数据
-      const wavBuffer = new Uint8Array(e.data.buffer.length);
-      wavBuffer.set(new Uint8Array(e.data.buffer))
+        const wavBuffer = new Uint8Array(e.data.buffer.length)
+        wavBuffer.set(new Uint8Array(e.data.buffer))
         this.sendFun!(wavBuffer)
       }
     }
@@ -62,19 +60,18 @@ export default class AudioCapture {
 
   // 停止监听 返回整体wav blob
   stop() {
-    if (!this.isRecording || !this.source) return new Blob();
+    if (!this.isRecording || !this.source) return new Blob()
 
     // 断开音频链路（保留节点）
-    this.source.disconnect(this.processor!);
-    this.processor!.disconnect(this.audioCtx!.destination);
+    this.source.disconnect(this.processor!)
+    this.processor!.disconnect(this.audioCtx!.destination)
 
     // 暂停音频上下文（避免后台耗电）
-    this.audioCtx!.suspend().catch(console.error);
+    this.audioCtx!.suspend().catch(console.error)
 
     // 清空缓冲区
-    this.processor!.port.postMessage({ command: 'flush' });
-    this.isRecording = false;
-
+    this.processor!.port.postMessage({ command: 'flush' })
+    this.isRecording = false
 
     const blob = this.#generateWav()
     return blob
@@ -110,7 +107,7 @@ export default class AudioCapture {
     headerBuffer.set(new Uint8Array(header))
     return headerBuffer
   }
-  #generateWav(): Blob{
+  #generateWav(): Blob {
     // 计算数据大小
     const dataSize = this.pcmChunks.reduce((acc, cur) => acc + cur.byteLength, 0)
     const header = this.#generateWavHeader({
@@ -120,16 +117,16 @@ export default class AudioCapture {
       dataSize
     })
     // 合并 PCM 数据
-    const pcmBuffer = new Uint8Array(header.byteLength + dataSize);
-    pcmBuffer.set(new Uint8Array(header));
-    let offset = header.byteLength;
+    const pcmBuffer = new Uint8Array(header.byteLength + dataSize)
+    pcmBuffer.set(new Uint8Array(header))
+    let offset = header.byteLength
 
-    this.pcmChunks.forEach(chunk => {
-      pcmBuffer.set(new Uint8Array(chunk.buffer), offset);
-      offset += chunk.byteLength;
-    });
+    this.pcmChunks.forEach((chunk) => {
+      pcmBuffer.set(new Uint8Array(chunk.buffer), offset)
+      offset += chunk.byteLength
+    })
 
-    return new Blob([pcmBuffer], { type: 'audio/wav' });
+    return new Blob([pcmBuffer], { type: 'audio/wav' })
   }
   /**
    * 生成wav文件头
@@ -139,7 +136,12 @@ export default class AudioCapture {
    * @param dataSize 数据大小
    * @returns wav文件头
    */
-  #generateWavHeader(params:{sampleRate:number, numChannels:number, bitsPerSample:number, dataSize:number}) {
+  #generateWavHeader(params: {
+    sampleRate: number
+    numChannels: number
+    bitsPerSample: number
+    dataSize: number
+  }) {
     const { sampleRate, numChannels, bitsPerSample, dataSize } = params
     const header = new ArrayBuffer(44) // 标准 44 字节头
     const view = new DataView(header)
@@ -171,7 +173,7 @@ export default class AudioCapture {
    * @param offset
    * @param str
    */
-  #writeString(view:DataView<ArrayBuffer> , offset: number, str:string) {
+  #writeString(view: DataView<ArrayBuffer>, offset: number, str: string) {
     for (let i = 0; i < str.length; i++) {
       view.setUint8(offset + i, str.charCodeAt(i))
     }
