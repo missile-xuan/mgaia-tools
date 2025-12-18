@@ -54,7 +54,7 @@ export default class AudioCapture {
         // 发送数据
         // 合并 PCM 数据
       const wavBuffer = new Uint8Array(e.data.buffer.length);
-      wavBuffer.set(new Uint8Array(e.data.buffer.length))
+      wavBuffer.set(new Uint8Array(e.data.buffer))
         this.sendFun!(wavBuffer)
       }
     }
@@ -103,7 +103,7 @@ export default class AudioCapture {
       sampleRate: 16000,
       numChannels: 1,
       bitsPerSample: 16,
-      dataSize: 0
+      dataSize: 999999
     })
 
     const headerBuffer = new Uint8Array(header.byteLength)
