@@ -7,9 +7,12 @@ import { io, Socket } from 'socket.io-client'
 const decoder = new TextDecoder('utf-8');
 // 测试socket.io
 const socket = io('http://172.30.12.13:3000/speechrecognition')
-
-const audioCapture = new AudioCapture((data: Blob) => {
+let connectId = ''
+let seq = 0
+const audioCapture = new AudioCapture((data: Uint8Array<ArrayBuffer>) => {
     console.log('send', data)
+    seq++
+    socket.emit('pushWavBuff', { connectId, payload: data, seq ,isLast: false })
   })
 
 const speaking = ref(false)
@@ -23,6 +26,8 @@ async function speak() {
 
 socket.on('open', function (data) {
   console.log('open', data)
+  connectId = data.connectId
+  seq = 1
 })
 socket.on('message', function (data) {
 
