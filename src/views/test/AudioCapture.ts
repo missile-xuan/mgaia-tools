@@ -4,11 +4,11 @@ export default class AudioCapture {
   private source?: MediaStreamAudioSourceNode
   private processor?: AudioWorkletNode
   private mediaStream?: MediaStream
-  private sendFun?: (data: Blob) => void
+  private sendFun?: (data: Uint8Array<ArrayBuffer>) => void
   private pcmChunks: Int16Array[] = []
   private wavBuffer?: Uint8Array<ArrayBuffer>
   private isRecording: boolean = false
-  constructor(sendFun: (data: Blob) => void) {
+  constructor(sendFun: (data: Uint8Array<ArrayBuffer>) => void) {
     this.sendFun = sendFun
 
 
@@ -50,6 +50,12 @@ export default class AudioCapture {
     this.processor!.port.onmessage = (e) => {
       if (e.data.type === 'pcm-data') {
         this.pcmChunks.push(e.data.buffer);
+
+        // 发送数据
+        // 合并 PCM 数据
+      const wavBuffer = new Uint8Array(e.data.buffer.length);
+      wavBuffer.set(new Uint8Array(e.data.buffer.length))
+        this.sendFun!(wavBuffer)
       }
     }
   }
