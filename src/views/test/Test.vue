@@ -7,13 +7,14 @@ import { io, Socket } from 'socket.io-client'
 const decoder = new TextDecoder('utf-8');
 // 测试socket.io
 const socket = io('http://172.30.12.13:3000/speechrecognition')
+const text = ref('')
 let connectId = ''
 let seq = 0
-const audioCapture = new AudioCapture((data: Uint8Array<ArrayBuffer>) => {
+const audioCapture = new AudioCapture((data: Int16Array<ArrayBuffer>) => {
     seq++
     if (seq === 2) {
       const header = audioCapture.getWavBufferHeader()
-      const pushData = new Uint8Array(header.byteLength + data.length);
+      const pushData = new Int16Array(header.byteLength + data.length);
       pushData.set(header)
       pushData.set(data, header.byteLength)
       data = pushData
@@ -28,6 +29,7 @@ const audioCapture = new AudioCapture((data: Uint8Array<ArrayBuffer>) => {
 const speaking = ref(false)
 async function speak() {
   socket.emit('open', {})
+  text.value = ''
 }
 
 socket.on('open', function (data) {
@@ -40,8 +42,13 @@ socket.on('open', function (data) {
 socket.on('message', function (data) {
 
   console.log('message', data)
-  const payloadStr = decoder.decode(data.payload)
-  console.log('payloadStr', payloadStr);
+  const payload = JSON.parse(decoder.decode(data.payload))
+  console.log('payload', payload);
+  if (payload.result?.text) {
+    text.value = payload.result.text
+  }
+
+
 })
 
 function stop() {
@@ -72,6 +79,7 @@ function destroy(){
     <el-button type="primary" @mousedown="speak" @mouseup="stop">说话</el-button>
     <el-button type="primary" @click="destroy">x销毁</el-button>
 
+    <div>{{ text }}</div>
   </div>
 </template>
 
