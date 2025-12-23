@@ -21,7 +21,7 @@ const audioCapture = new AudioCapture((data: Int16Array<ArrayBuffer>) => {
     }
     const req = { connectId, payload: data, seq ,isLast: false }
 
-    socket.emit('pushWavBuff', req)
+    socket.emit('pushPcmBuff', req)
     console.log('send', req);
 
   })
